@@ -15,4 +15,8 @@ A simple React application named "forms".
 
 ---
 
+<<<<<<< HEAD
 This project was bootstrapped with Vite and React.
+=======
+This project was bootstrapped with Vite and React.
+>>>>>>> f9342e1 (kinda full 2)
