@@ -63,34 +63,40 @@ export default function Login() {
   };
 
   return (
-    <div className="card">
-      <h2>Login</h2>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      <p style={{ textAlign: "center", marginTop: 16 }}>
-        Don't have an account?{" "}
-        <button type="button" onClick={() => navigate("/register")}>
-          Register
-        </button>
-      </p>
+    <div className="min-h-screen flex items-center justify-center bg-[#fafafb]">
+      <div className="card" style={{ maxWidth: 400, width: "100%" }}>
+        <h2 style={{ textAlign: "center", marginBottom: 8 }}>Login</h2>
+        <p style={{ textAlign: "center", color: "#888", marginBottom: 24, fontSize: 15 }}>Sign in to your account</p>
+        {error && <p className="error">{error}</p>}
+        <form onSubmit={handleSubmit} autoComplete="off">
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="mb-3"
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="mb-3"
+          />
+          <button type="submit" className="w-full" style={{ marginTop: 8 }}>Login</button>
+        </form>
+        <div style={{ borderTop: "1px solid #eee", margin: "24px 0 0 0", paddingTop: 16, textAlign: "center" }}>
+          <span style={{ color: "#888", fontSize: 15 }}>Don't have an account?</span>
+          <button type="button" onClick={() => navigate("/register")}
+            style={{ background: "none", color: "#2563eb", border: "none", fontWeight: 500, marginLeft: 8, cursor: "pointer" }}>
+            Register
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

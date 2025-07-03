@@ -1,78 +1,190 @@
 import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ID, Query } from "appwrite";
 import { account, databases } from "../lib/appwrite";
-import { useNavigate } from "react-router-dom";
 
-export default function FilledForms() {
+export default function FillFormPage() {
+  const { id: templateId } = useParams();
   const navigate = useNavigate();
-  const [forms, setForms] = useState([]);
+
+  const [template, setTemplate] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const [emailCopy, setEmailCopy] = useState(false);
   const [user, setUser] = useState(null);
+  const [comment, setComment] = useState(""); // 🆕 comment field
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const dbId = import.meta.env.VITE_APPWRITE_DB_ID;
   const formsCol = import.meta.env.VITE_APPWRITE_FORMS_COLLECTION_ID;
+  const templatesCol = import.meta.env.VITE_APPWRITE_TEMPLATES_COLLECTION_ID;
+  const questionsCol = import.meta.env.VITE_APPWRITE_QUESTIONS_COLLECTION_ID;
+  const commentsCol = import.meta.env.VITE_APPWRITE_COMMENTS_COLLECTION_ID;
 
-  // Step 1: Get current user
+  // 🔐 Get user
   useEffect(() => {
-    account.get()
+    account
+      .get()
       .then((u) => setUser(u))
       .catch(() => {
-        alert("⚠️ You need to log in to view your filled forms.");
+        alert("⚠️ Please log in to fill out the form.");
         navigate("/login");
       });
   }, []);
 
-  // Step 2: Fetch filled forms
+  // 📦 Fetch template and questions
   useEffect(() => {
     if (!user) return;
 
-    async function fetchForms() {
+    const loadData = async () => {
       setLoading(true);
       try {
-        const res = await databases.listDocuments(dbId, formsCol, [
-          // Only show forms filled by current user
-          Appwrite.Query.equal("createdBy", user.$id),
+        const tempRes = await databases.getDocument(dbId, templatesCol, templateId);
+        setTemplate(tempRes);
+
+        const qRes = await databases.listDocuments(dbId, questionsCol, [
+          Query.equal("templateId", templateId),
+          Query.orderAsc("order"),
         ]);
-        setForms(res.documents);
-      } catch {
-        setForms([]);
+        setQuestions(qRes.documents);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load template.");
       }
       setLoading(false);
-    }
+    };
 
-    fetchForms();
+    loadData();
   }, [user]);
 
+  const handleChange = (qId, value) => {
+    setAnswers((prev) => ({ ...prev, [qId]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const formattedAnswers = questions.map((q) => {
+        const answer = answers[q.$id] || "";
+        return `Q: ${q.title} | A: ${answer}`;
+      });
+
+      // 📝 Save the form
+      await databases.createDocument(dbId, formsCol, ID.unique(), {
+        templateId,
+        createdBy: user.$id,
+        emailCopy,
+        answers: formattedAnswers,
+      });
+
+      // 💬 Save the comment if it's not empty
+      if (comment.trim() !== "") {
+        await databases.createDocument(dbId, commentsCol, ID.unique(), {
+          templateId,
+          userId: user.$id,
+          content: comment.trim(),
+        });
+      }
+
+      alert("✅ Form and comment submitted!");
+      navigate("/filled-forms");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Failed to submit form.");
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+
   return (
-    <div className="card" style={{ maxWidth: 900 }}>
-      <h2>Your Filled Forms</h2>
-      {loading ? (
-        <p>Loading...</p>
-      ) : forms.length === 0 ? (
-        <p>No forms submitted yet.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left", padding: 8 }}>Form ID</th>
-              <th style={{ textAlign: "left", padding: 8 }}>Template</th>
-              <th style={{ textAlign: "left", padding: 8 }}>Email Copy</th>
-              <th style={{ textAlign: "left", padding: 8 }}>Submitted</th>
-            </tr>
-          </thead>
-          <tbody>
-            {forms.map((f) => (
-              <tr key={f.$id} style={{ borderTop: "1px solid #eee" }}>
-                <td style={{ padding: 8 }}>{f.$id}</td>
-                <td style={{ padding: 8 }}>{f.templateId}</td>
-                <td style={{ padding: 8 }}>{f.emailCopy ? "Yes" : "No"}</td>
-                <td style={{ padding: 8 }}>
-                  {new Date(f.$createdAt).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    <div className="card" style={{ maxWidth: 800, margin: "auto" }}>
+      <h2>{template?.title}</h2>
+      <p>{template?.description}</p>
+
+      <form onSubmit={handleSubmit}>
+        {questions.map((q) => (
+          <div key={q.$id} style={{ marginBottom: 16 }}>
+            <label><b>{q.title}</b></label>
+            <p>{q.description}</p>
+            {q.type === "string-line" && (
+              <input
+                type="text"
+                className="border p-1 rounded w-full"
+                value={answers[q.$id] || ""}
+                onChange={(e) => handleChange(q.$id, e.target.value)}
+              />
+            )}
+            {q.type === "multi-line" && (
+              <textarea
+                className="border p-1 rounded w-full"
+                rows={4}
+                value={answers[q.$id] || ""}
+                onChange={(e) => handleChange(q.$id, e.target.value)}
+              />
+            )}
+            {q.type === "integer" && (
+              <input
+                type="number"
+                className="border p-1 rounded w-full"
+                value={answers[q.$id] || ""}
+                onChange={(e) => handleChange(q.$id, e.target.value)}
+              />
+            )}
+            {q.type === "checkbox" && (
+              <input
+                type="checkbox"
+                checked={answers[q.$id] || false}
+                onChange={(e) => handleChange(q.$id, e.target.checked)}
+              />
+            )}
+            {q.type === "drow-down" && (
+              <select
+                className="border p-1 rounded w-full"
+                value={answers[q.$id] || ""}
+                onChange={(e) => handleChange(q.$id, e.target.value)}
+              >
+                <option value="">Select...</option>
+                {q.options?.map((opt, idx) => (
+                  <option key={idx} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        ))}
+
+        {/* ✅ Email Copy */}
+        <label className="flex items-center gap-2 mb-4">
+          <input
+            type="checkbox"
+            checked={emailCopy}
+            onChange={(e) => setEmailCopy(e.target.checked)}
+          />
+          Send me a copy of my responses
+        </label>
+
+        {/* ✅ Comment */}
+        <div className="mb-4">
+          <label><b>Your Comment (optional)</b></label>
+          <textarea
+            className="border p-1 rounded w-full"
+            rows={3}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Leave your feedback..."
+          />
+        </div>
+
+        {/* ✅ Submit */}
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+          Submit Form
+        </button>
+      </form>
     </div>
   );
 }

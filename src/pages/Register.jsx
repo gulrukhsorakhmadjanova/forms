@@ -21,29 +21,29 @@ export default function Register() {
     setError("");
 
     try {
-      // Step 1: Create Appwrite Auth account
+      // Step 1: Register user (auto creates session)
       await account.create(ID.unique(), form.email, form.password, form.name);
 
-      // Step 2: Clear existing session if any
+      // Step 2: Delete existing session if any (to avoid double session error)
       try {
         await account.deleteSession("current");
       } catch (_) {}
 
-      // Step 3: Login
+      // Step 3: Login again to create clean session
       await account.createEmailPasswordSession(form.email, form.password);
 
-      // Step 4: Get Auth user
+      // Step 4: Get Authenticated User
       const user = await account.get();
       const authUserId = user.$id;
 
-      // Step 5: Check if already exists in DB
+      // Step 5: Check if user already exists in DB
       const res = await databases.listDocuments(dbId, usersCol, [
         Query.equal("authUserId", authUserId),
       ]);
 
       const exists = res.documents.length > 0;
 
-      // Step 6: Create if not exists
+      // Step 6: If not exists, create user document
       if (!exists) {
         await databases.createDocument(
           dbId,
@@ -51,12 +51,12 @@ export default function Register() {
           ID.unique(),
           {
             authUserId,
-            name: user.name || "Unnamed",
-            email: user.email,
-            avatarUrl: user.prefs?.avatarUrl || "",
+            name: form.name,
+            email: form.email,
             isAdmin,
             isBlocked: false,
             isApproved: false,
+            avatarUrl: user.prefs?.avatarUrl || "",
             language: "en",
             theme: "light",
           },
@@ -68,8 +68,8 @@ export default function Register() {
         );
       }
 
-      // Step 7: Navigate to dashboard
-      navigate("/dashboard");
+      // Step 7: Go to dashboard
+      navigate("/");
 
     } catch (err) {
       console.error("Registration Error:", err);
