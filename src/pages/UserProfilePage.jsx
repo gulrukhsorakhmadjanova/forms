@@ -15,6 +15,7 @@ export default function UserProfilePage() {
   const [usersMap, setUsersMap] = useState({});
   const [commentsMap, setCommentsMap] = useState({});
   const [likesMap, setLikesMap] = useState({});
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const dbId = import.meta.env.VITE_APPWRITE_DB_ID;
   const templatesCol = import.meta.env.VITE_APPWRITE_TEMPLATES_COLLECTION_ID;
@@ -28,6 +29,14 @@ export default function UserProfilePage() {
 
     const fetchData = async () => {
       const viewingUserId = userId || authUser?.userId;
+
+      // 🔍 Check if current user is admin
+      try {
+        const userDoc = await databases.getDocument(dbId, usersCol, viewingUserId);
+        setIsAdmin(userDoc.role === "admin");
+      } catch (err) {
+        console.warn("Could not fetch user role:", err);
+      }
 
       const templatesRes = await databases.listDocuments(dbId, templatesCol, [
         Query.equal("createdBy", viewingUserId),
@@ -81,14 +90,25 @@ export default function UserProfilePage() {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {userId && authUser?.userId !== userId ? `User Profile` : `My Profile`}
         </h2>
-        {authUser && (
-          <button
-            onClick={() => navigate("/filled-forms")}
-            className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
-          >
-            View Filled Forms
-          </button>
-        )}
+
+        <div className="flex gap-2">
+          {authUser && (
+            <button
+              onClick={() => navigate("/filled-forms")}
+              className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+            >
+              View Filled Forms
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="px-4 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+            >
+              Admin Panel
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-4 mb-6">
