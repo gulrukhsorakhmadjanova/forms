@@ -12,7 +12,7 @@ export default function FillFormPage() {
   const [answers, setAnswers] = useState({});
   const [emailCopy, setEmailCopy] = useState(false);
   const [user, setUser] = useState(null);
-  const [comment, setComment] = useState(""); // 🆕 comment field
+  const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -22,7 +22,6 @@ export default function FillFormPage() {
   const questionsCol = import.meta.env.VITE_APPWRITE_QUESTIONS_COLLECTION_ID;
   const commentsCol = import.meta.env.VITE_APPWRITE_COMMENTS_COLLECTION_ID;
 
-  // 🔐 Get user
   useEffect(() => {
     account
       .get()
@@ -33,7 +32,6 @@ export default function FillFormPage() {
       });
   }, []);
 
-  // 📦 Fetch template and questions
   useEffect(() => {
     if (!user) return;
 
@@ -68,11 +66,18 @@ export default function FillFormPage() {
 
     try {
       const formattedAnswers = questions.map((q) => {
-        const answer = answers[q.$id] || "";
+        let answer = answers[q.$id];
+        if (Array.isArray(answer)) {
+          answer = answer.join(", ");
+        }
+        answer = answer || "";
         return `Q: ${q.title} | A: ${answer}`;
       });
 
-      // 📝 Save the form
+      if (answers["open-answer"]) {
+        formattedAnswers.push(`Open Answer: ${answers["open-answer"]}`);
+      }
+
       await databases.createDocument(dbId, formsCol, ID.unique(), {
         templateId,
         createdBy: user.$id,
@@ -80,7 +85,6 @@ export default function FillFormPage() {
         answers: formattedAnswers,
       });
 
-      // 💬 Save the comment if it's not empty
       if (comment.trim() !== "") {
         await databases.createDocument(dbId, commentsCol, ID.unique(), {
           templateId,
@@ -97,30 +101,30 @@ export default function FillFormPage() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (loading) return <p className="text-gray-600 dark:text-gray-300">Loading...</p>;
+  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
 
   return (
-    <div className="card" style={{ maxWidth: 800, margin: "auto" }}>
-      <h2>{template?.title}</h2>
-      <p>{template?.description}</p>
+    <div className="card max-w-2xl mx-auto my-8 bg-white dark:bg-[#23232a] rounded-xl shadow-lg transition-colors duration-300 p-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{template?.title}</h2>
+      <p className="mb-4 text-gray-700 dark:text-gray-300">{template?.description}</p>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {questions.map((q) => (
-          <div key={q.$id} style={{ marginBottom: 16 }}>
-            <label><b>{q.title}</b></label>
-            <p>{q.description}</p>
+          <div key={q.$id} className="mb-2">
+            <label className="font-semibold text-gray-900 dark:text-gray-100">{q.title}</label>
+            <p className="text-gray-600 dark:text-gray-300 mb-1">{q.description}</p>
             {q.type === "string-line" && (
               <input
                 type="text"
-                className="border p-1 rounded w-full"
+                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
                 value={answers[q.$id] || ""}
                 onChange={(e) => handleChange(q.$id, e.target.value)}
               />
             )}
             {q.type === "multi-line" && (
               <textarea
-                className="border p-1 rounded w-full"
+                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
                 rows={4}
                 value={answers[q.$id] || ""}
                 onChange={(e) => handleChange(q.$id, e.target.value)}
@@ -129,21 +133,44 @@ export default function FillFormPage() {
             {q.type === "integer" && (
               <input
                 type="number"
-                className="border p-1 rounded w-full"
+                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
                 value={answers[q.$id] || ""}
                 onChange={(e) => handleChange(q.$id, e.target.value)}
               />
             )}
-            {q.type === "checkbox" && (
+            {q.type === "checkbox" && ((Array.isArray(q.options) ? q.options : typeof q.options === 'string' ? q.options.split(',').map(o => o.trim()) : []).length > 0) ? (
+              <div className="flex flex-col gap-1">
+                {(Array.isArray(q.options) ? q.options : typeof q.options === 'string' ? q.options.split(',').map(o => o.trim()) : []).map((opt, idx) => (
+                  <label key={idx} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={Array.isArray(answers[q.$id]) ? answers[q.$id].includes(opt) : false}
+                      onChange={e => {
+                        let prev = Array.isArray(answers[q.$id]) ? answers[q.$id] : [];
+                        if (e.target.checked) {
+                          prev = [...prev, opt];
+                        } else {
+                          prev = prev.filter(o => o !== opt);
+                        }
+                        handleChange(q.$id, prev);
+                      }}
+                      className="accent-blue-600"
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+            ) : q.type === "checkbox" && (!q.options || (Array.isArray(q.options) && q.options.length === 0) || (typeof q.options === 'string' && q.options.trim() === '')) ? (
               <input
                 type="checkbox"
                 checked={answers[q.$id] || false}
-                onChange={(e) => handleChange(q.$id, e.target.checked)}
+                onChange={e => handleChange(q.$id, e.target.checked)}
+                className="accent-blue-600"
               />
-            )}
+            ) : null}
             {q.type === "drow-down" && (
               <select
-                className="border p-1 rounded w-full"
+                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
                 value={answers[q.$id] || ""}
                 onChange={(e) => handleChange(q.$id, e.target.value)}
               >
@@ -158,21 +185,34 @@ export default function FillFormPage() {
           </div>
         ))}
 
+        {/* ✅ Open Answer Input */}
+        <div className="mb-4">
+          <label className="font-semibold text-gray-900 dark:text-gray-100">Your Answer</label>
+          <textarea
+            className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
+            rows={4}
+            value={answers["open-answer"] || ""}
+            onChange={(e) => handleChange("open-answer", e.target.value)}
+            placeholder="Type your answer here..."
+          />
+        </div>
+
         {/* ✅ Email Copy */}
-        <label className="flex items-center gap-2 mb-4">
+        <label className="flex items-center gap-2 mb-4 text-gray-900 dark:text-gray-100">
           <input
             type="checkbox"
             checked={emailCopy}
             onChange={(e) => setEmailCopy(e.target.checked)}
+            className="accent-blue-600"
           />
           Send me a copy of my responses
         </label>
 
-        {/* ✅ Comment */}
+        {/* ✅ Comment Field */}
         <div className="mb-4">
-          <label><b>Your Comment (optional)</b></label>
+          <label className="font-semibold text-gray-900 dark:text-gray-100">Your Comment (optional)</label>
           <textarea
-            className="border p-1 rounded w-full"
+            className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -181,7 +221,7 @@ export default function FillFormPage() {
         </div>
 
         {/* ✅ Submit */}
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
           Submit Form
         </button>
       </form>

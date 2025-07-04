@@ -101,7 +101,7 @@ export default function CreateTemplate() {
         );
       }
 
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -109,54 +109,54 @@ export default function CreateTemplate() {
   };
 
   return (
-    <div style={{ maxWidth: "600px", margin: "auto" }}>
-      <h2>Create Template</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <div className="max-w-xl mx-auto p-6 bg-white dark:bg-[#23232a] rounded-xl shadow-lg transition-colors duration-300">
+      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Create Template</h2>
+      {error && <p className="text-red-600 dark:text-red-400 mb-2">{error}</p>}
 
-      <form onSubmit={handleSubmit}>
-        <input name="title" placeholder="Title" onChange={handleChange} required /><br /><br />
-        <textarea name="description" placeholder="Description (markdown allowed)" onChange={handleChange} required /><br />
-        <div style={{ margin: "8px 0", background: isDark ? "#23232a" : "#f8f8fa", padding: 8, borderRadius: 6 }}>
-          <b>Preview:</b>
-          <div style={{ border: "1px solid #eee", padding: 8, borderRadius: 6, minHeight: 40, background: isDark ? "#18181b" : "#fff", color: isDark ? "#fff" : "#23232a" }}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input name="title" placeholder="Title" onChange={handleChange} required className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <textarea name="description" placeholder="Description (markdown allowed)" onChange={handleChange} required className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div className="my-2 bg-gray-50 dark:bg-[#23232a] p-3 rounded">
+          <b className="text-gray-800 dark:text-gray-200">Preview:</b>
+          <div className="border border-gray-200 dark:border-gray-700 p-2 rounded min-h-[40px] bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100">
             <ReactMarkdown>{form.description}</ReactMarkdown>
           </div>
         </div>
-        <select name="topic" onChange={handleChange} value={form.topic}>
+        <select name="topic" onChange={handleChange} value={form.topic} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100">
           {topics.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select><br /><br />
-        <label>Tags:</label>
+        </select>
+        <label className="text-gray-800 dark:text-gray-200">Tags:</label>
         <ReactTagInput
           tags={tags}
           onChange={setTags}
           placeholder="Type and press enter"
-        /><br /><br />
-        <input name="imageUrl" placeholder="Image URL (optional)" onChange={handleChange} /><br /><br />
-        <label>
+        />
+        <input name="imageUrl" placeholder="Image URL (optional)" onChange={handleChange} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100" />
+        <label className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
           <input type="checkbox" name="isPublic" onChange={handleChange} /> Make Public
-        </label><br /><br />
+        </label>
 
-        <h3>Questions</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-4">Questions</h3>
         {questions.map((q, i) => (
-          <div key={i} style={{ marginBottom: 16, padding: 12, border: "1px solid #ddd", borderRadius: 8 }}>
-            <input placeholder="Title" value={q.title} onChange={e => handleQuestionChange(i, "title", e.target.value)} required /><br />
-            <textarea placeholder="Description" value={q.description} onChange={e => handleQuestionChange(i, "description", e.target.value)} /><br />
-            <select value={q.type} onChange={e => handleQuestionChange(i, "type", e.target.value)}>
+          <div key={i} className="mb-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-[#18181b]">
+            <input placeholder="Title" value={q.title} onChange={e => handleQuestionChange(i, "title", e.target.value)} required className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-2 w-full bg-white dark:bg-[#23232a] text-gray-900 dark:text-gray-100" />
+            <textarea placeholder="Description" value={q.description} onChange={e => handleQuestionChange(i, "description", e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-2 w-full bg-white dark:bg-[#23232a] text-gray-900 dark:text-gray-100" />
+            <select value={q.type} onChange={e => handleQuestionChange(i, "type", e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-2 w-full bg-white dark:bg-[#23232a] text-gray-900 dark:text-gray-100">
               {types.map(t => <option key={t} value={t}>{t}</option>)}
-            </select><br />
-            {["drop-down"].includes(q.type) && (
-              <input placeholder="Options (comma-separated)" value={q.options} onChange={e => handleQuestionChange(i, "options", e.target.value)} />
-            )}<br />
-            <input type="number" placeholder="Order" value={q.order} onChange={e => handleQuestionChange(i, "order", parseInt(e.target.value))} /><br />
-            <label>
+            </select>
+            {(q.type === 'drop-down' || q.type === 'checkbox') && (
+              <input placeholder="Options (comma-separated)" value={q.options} onChange={e => handleQuestionChange(i, "options", e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-2 w-full bg-white dark:bg-[#23232a] text-gray-900 dark:text-gray-100" />
+            )}
+            <input type="number" placeholder="Order" value={q.order} onChange={e => handleQuestionChange(i, "order", parseInt(e.target.value))} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-2 w-full bg-white dark:bg-[#23232a] text-gray-900 dark:text-gray-100" />
+            <label className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
               <input type="checkbox" checked={q.showInTable} onChange={e => handleQuestionChange(i, "showInTable", e.target.checked)} />
               Show in Table
-            </label><br />
-            <button type="button" onClick={() => removeQuestion(i)}>Remove Question</button>
+            </label>
+            <button type="button" onClick={() => removeQuestion(i)} className="mt-2 text-red-600 dark:text-red-400 hover:underline">Remove Question</button>
           </div>
         ))}
-        <button type="button" onClick={addQuestion} style={{ marginBottom: 16 }}>+ Add Question</button><br />
-        <button type="submit">Save Template</button>
+        <button type="button" onClick={addQuestion} className="mb-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors">+ Add Question</button>
+        <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors">Save Template</button>
       </form>
     </div>
   );

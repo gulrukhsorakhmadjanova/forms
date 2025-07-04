@@ -1,169 +1,24 @@
 @import "tailwindcss";
 
-:root {
-  --primary: #2563eb;
-  --primary-dark: #1e40af;
-  --bg-light: #fafafb;
-  --bg-dark: #18181b;
-  --text-light: #56565c;
-  --text-dark: #fafafb;
-  --card-bg-light: #fff;
-  --card-bg-dark: #23232a;
-  --border-light: #e5e7eb;
-  --border-dark: #333;
-}
-
 body {
-  background: var(--bg-light);
-  color: var(--text-light);
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-  margin: 0;
-  min-height: 100vh;
+  @apply transition-colors duration-300 bg-[#fafafa] text-[#111827] dark:bg-[#18181b] dark:text-[#f4f4f5] font-sans m-0;
 }
 
-body.dark {
-  background: var(--bg-dark);
-  color: var(--text-dark);
+* {
+  @apply transition-colors duration-300;
 }
 
-header {
-  background: var(--card-bg-light);
-  border-bottom: 1px solid var(--border-light);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  min-height: 64px;
-}
-body.dark header {
-  background: var(--card-bg-dark);
-  border-bottom: 1px solid var(--border-dark);
+.header {
+  @apply flex justify-between items-center px-6 py-3 bg-white border-b border-gray-200 dark:bg-[#23232a] dark:border-gray-800;
 }
 
-header a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 500;
-  margin-right: 24px;
-  transition: color 0.2s;
+.header-left a {
+  @apply mr-4 no-underline text-blue-700 font-medium dark:text-blue-400;
 }
-header a:last-child { margin-right: 0; }
-header a:hover {
-  color: var(--primary-dark);
+.header-left a.active {
+  @apply underline;
 }
 
-header button, header select {
-  margin-left: 16px;
-  padding: 6px 16px;
-  border-radius: 6px;
-  border: 1px solid var(--border-light);
-  background: var(--primary);
-  color: #fff;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-header button:hover, header select:hover {
-  background: var(--primary-dark);
-}
-body.dark header button, body.dark header select {
-  border: 1px solid var(--border-dark);
-}
-
-.card {
-  background: var(--card-bg-light);
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-  padding: 32px 24px;
-  margin: 32px auto;
-  max-width: 420px;
-  border: 1px solid var(--border-light);
-}
-body.dark .card {
-  background: var(--card-bg-dark);
-  border: 1px solid var(--border-dark);
-}
-
-input, textarea, select {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 18px;
-  border-radius: 6px;
-  border: 1px solid var(--border-light);
-  background: var(--card-bg-light);
-  color: var(--text-light);
-  font-size: 1rem;
-  transition: border 0.2s, background 0.2s;
-}
-input:focus, textarea:focus, select:focus {
-  border: 1.5px solid var(--primary);
-  outline: none;
-}
-body.dark input, body.dark textarea, body.dark select {
-  background: var(--card-bg-dark);
-  color: var(--text-dark);
-  border: 1px solid var(--border-dark);
-}
-
-button[type="submit"] {
-  width: 100%;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 12px 0;
-  font-size: 1rem;
-  font-weight: 600;
-  margin-top: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-button[type="submit"]:hover {
-  background: var(--primary-dark);
-}
-body.dark button[type="submit"] {
-  background: var(--primary-dark);
-}
-
-h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-p {
-  margin-bottom: 12px;
-}
-
-.error {
-  color: #e11d48;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  padding: 8px 12px;
-  margin-bottom: 18px;
-  text-align: center;
-}
-body.dark .error {
-  background: #3f1d2e;
-  border: 1px solid #e11d48;
-  color: #fecaca;
-}
-
-@media (max-width: 600px) {
-  .card {
-    padding: 18px 6px;
-    margin: 16px 0;
-  }
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0 8px;
-    min-height: 48px;
-  }
-  header a, header button, header select {
-    margin: 4px 0;
-  }
+.header-right button {
+  @apply px-3 py-1 bg-transparent border border-gray-300 rounded-md cursor-pointer text-blue-700 dark:border-gray-700 dark:text-blue-400 transition-colors;
 }

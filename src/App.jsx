@@ -12,26 +12,19 @@ import { ID } from "appwrite";
 // Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
 import CreateTemplate from "./pages/CreateTemplate";
 import HomePage from "./pages/HomePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import TemplateViewPage from "./pages/TemplateViewPage";
 import FillFormPage from "./pages/FillFormPage";
-import FormViewPage from "./pages/FormViewPage";
-import SearchPage from "./pages/SearchPage";
 import AdminPage from "./pages/AdminPage";
 import BlockedPage from "./pages/BlockedPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import FilledFormsPage from "./pages/FilledFormsPage";
 
 // Contexts
-const ThemeContext = createContext();
-const LanguageContext = createContext();
 const AuthContext = createContext();
 
-// Hooks
-export const useTheme = () => useContext(ThemeContext);
-export const useLanguage = () => useContext(LanguageContext);
 export const useAuth = () => useContext(AuthContext);
 
 // Translations
@@ -80,33 +73,6 @@ const translations = {
   },
 };
 
-// Theme Provider
-function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
-  useEffect(() => {
-    document.body.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-// Language Provider
-function LanguageProvider({ children }) {
-  const [lang, setLang] = useState(() => localStorage.getItem("lang") || "en");
-  useEffect(() => {
-    localStorage.setItem("lang", lang);
-  }, [lang]);
-  return (
-    <LanguageContext.Provider value={{ lang, setLang, t: translations[lang] }}>
-      {children}
-    </LanguageContext.Provider>
-  );
-}
-
 // Auth Provider
 function AuthProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);
@@ -130,10 +96,7 @@ function AuthProvider({ children }) {
             name: dbUser.name,
             email: dbUser.email,
             isAdmin: dbUser.isAdmin,
-            isApproved: dbUser.isApproved,
             isBlocked: dbUser.isBlocked,
-            language: dbUser.language,
-            theme: dbUser.theme,
           });
         } else {
           setAuthUser(null);
@@ -154,23 +117,13 @@ function AuthProvider({ children }) {
   );
 }
 
-// Header Component
+// Header
 function Header() {
-  const { theme, setTheme } = useTheme();
-  const { lang, setLang, t } = useLanguage();
   const { authUser, setAuthUser } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
   const location = useLocation();
 
-  const isAdmin = authUser?.isAdmin && authUser?.isApproved && !authUser?.isBlocked;
-
-  const handleThemeToggle = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
-
-  const handleLangChange = (e) => {
-    setLang(e.target.value);
-  };
+  const isAdmin = authUser?.isAdmin && !authUser?.isBlocked;
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -184,36 +137,48 @@ function Header() {
   };
 
   return (
-    <header className="w-full border-b bg-white" style={{ minHeight: 56 }}>
+    <header className="w-full border-b bg-white dark:bg-[#18181b] dark:border-gray-700 shadow-sm z-50 sticky top-0">
       <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-2">
-        <nav className="flex items-center gap-8">
-          <Link to="/" className="font-semibold text-lg tracking-tight">FormBuilder</Link>
+        <nav className="flex items-center gap-6 text-sm font-medium">
+          <Link to="/" className="text-blue-600 dark:text-blue-400 font-bold text-lg">FormBuilder</Link>
           {isAdmin && (
             <>
-              <Link to="/dashboard" className={location.pathname === "/dashboard" ? "font-bold" : "font-normal"}>{t.dashboard}</Link>
-              <Link to="/admin" className={location.pathname === "/admin" ? "font-bold" : "font-normal"}>{t.adminPanel}</Link>
+              <Link to="/dashboard" className={location.pathname === "/dashboard" ? "underline" : ""}>{translations.en.dashboard}</Link>
+              <Link to="/admin" className={location.pathname === "/admin" ? "underline" : ""}>{translations.en.adminPanel}</Link>
             </>
           )}
-          <Link to="/template/create" className={location.pathname === "/template/create" ? "font-bold" : "font-normal"}>{t.createTemplate}</Link>
+          <Link to="/template/create" className={location.pathname === "/template/create" ? "underline" : ""}>{translations.en.createTemplate}</Link>
         </nav>
-        <div className="flex items-center gap-4">
-          <button onClick={handleThemeToggle} title={theme === "light" ? t.dark : t.light} className="px-2 py-1 rounded border bg-white text-sm">
-            {theme === "light" ? "🌙" : "☀️"}
-          </button>
-          <select value={lang} onChange={handleLangChange} className="px-2 py-1 rounded border bg-white text-sm">
-            <option value="en">EN</option>
-            <option value="uz">UZ</option>
-            <option value="ru">RU</option>
+        <div className="flex items-center gap-3">
+          <select
+            value="en" // Removed theme and language logic
+            onChange={(e) => {}} // Removed theme and language logic
+            className="px-2 py-1 rounded border dark:border-gray-600 text-sm"
+          >
+            <option value="en">{translations.en.english}</option>
+            <option value="uz">{translations.uz.uzbek}</option>
+            <option value="ru">{translations.ru.russian}</option>
           </select>
           {authUser ? (
             <>
-              <span className="font-medium text-sm">{authUser.name}</span>
-              <button onClick={handleLogout} disabled={loggingOut} className="px-3 py-1 rounded border bg-white text-sm font-medium" style={{ color: "#e11d48" }}>{t.logout}</button>
+              <Link
+                to="/profile"
+                className="text-sm font-semibold hover:underline text-blue-600 dark:text-blue-400 cursor-pointer"
+              >
+                {authUser.name}
+              </Link>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="text-red-600 text-sm font-medium"
+              >
+                {translations.en.logout}
+              </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-sm">{t.login}</Link>
-              <Link to="/register" className="text-sm">{t.register}</Link>
+              <Link to="/login" className="text-sm">{translations.en.login}</Link>
+              <Link to="/register" className="text-sm">{translations.en.register}</Link>
             </>
           )}
         </div>
@@ -222,11 +187,9 @@ function Header() {
   );
 }
 
-// App Component
-function App() {
+// App
+export default function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
         <AuthProvider>
           <Router>
             <Header />
@@ -234,22 +197,17 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/template/create" element={<CreateTemplate />} />
               <Route path="/template/:id" element={<TemplateViewPage />} />
               <Route path="/template/:id/fill" element={<FillFormPage />} />
-              <Route path="/form/:id" element={<FormViewPage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/profile" element={<UserProfilePage />} /> {/* self profile */}
+          <Route path="/profile/:userId" element={<UserProfilePage />} /> {/* public profiles */}
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/blocked" element={<BlockedPage />} />
+          <Route path="/filled-forms" element={<FilledFormsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Router>
         </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
   );
 }
-
-export default App;
