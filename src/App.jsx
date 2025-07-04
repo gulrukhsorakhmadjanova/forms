@@ -143,7 +143,6 @@ function Header() {
           <Link to="/" className="text-blue-600 dark:text-blue-400 font-bold text-lg">FormBuilder</Link>
           {isAdmin && (
             <>
-              <Link to="/dashboard" className={location.pathname === "/dashboard" ? "underline" : ""}>{translations.en.dashboard}</Link>
               <Link to="/admin" className={location.pathname === "/admin" ? "underline" : ""}>{translations.en.adminPanel}</Link>
             </>
           )}
@@ -151,8 +150,8 @@ function Header() {
         </nav>
         <div className="flex items-center gap-3">
           <select
-            value="en" // Removed theme and language logic
-            onChange={(e) => {}} // Removed theme and language logic
+            value="en" 
+            onChange={(e) => {}} 
             className="px-2 py-1 rounded border dark:border-gray-600 text-sm"
           >
             <option value="en">{translations.en.english}</option>
@@ -200,11 +199,12 @@ export default function App() {
               <Route path="/template/create" element={<CreateTemplate />} />
               <Route path="/template/:id" element={<TemplateViewPage />} />
               <Route path="/template/:id/fill" element={<FillFormPage />} />
-          <Route path="/profile" element={<UserProfilePage />} /> {/* self profile */}
-          <Route path="/profile/:userId" element={<UserProfilePage />} /> {/* public profiles */}
+              <Route path="/profile" element={<UserProfilePage />} />
+              <Route path="/profile/:userId" element={<UserProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/blocked" element={<BlockedPage />} />
-          <Route path="/filled-forms" element={<FilledFormsPage />} />
+              <Route path="/filled-forms" element={<FilledFormsPage />} />
+
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Router>

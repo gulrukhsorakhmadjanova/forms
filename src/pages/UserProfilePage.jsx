@@ -76,22 +76,22 @@ export default function UserProfilePage() {
   }, [authUser, userId]);
 
   return (
-    <div className="card max-w-3xl mx-auto mt-8 bg-white dark:bg-[#23232a] rounded-xl shadow-lg transition-colors duration-300 p-6">
+    <div className="card max-w-4xl mx-auto mt-8 bg-white dark:bg-[#23232a] rounded-xl shadow-lg transition-colors duration-300 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-          {authUser?.$id === userId ? "My Profile" : `User Profile`}
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {userId && authUser?.userId !== userId ? `User Profile` : `My Profile`}
         </h2>
-        {authUser?.isAdmin && (
+        {authUser && (
           <button
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate("/filled-forms")}
             className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
           >
-            Admin Panel
+            View Filled Forms
           </button>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="flex gap-4 mb-6">
         <button
           onClick={() => setTab("templates")}
           className={`px-4 py-2 rounded font-semibold transition-colors ${
@@ -112,64 +112,60 @@ export default function UserProfilePage() {
         >
           Forms
         </button>
-        {authUser?.userId === userId && (
-          <button
-            onClick={() => navigate("/filled-forms")}
-            className="px-4 py-2 rounded font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors"
-          >
-            Filled Forms
-          </button>
-        )}
       </div>
 
       {tab === "templates" ? (
-        templates.map((t) => (
-          <div key={t.$id} className="mb-6 p-4 border rounded bg-white dark:bg-[#1f1f24]">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t.title}</h3>
-            <p className="text-gray-700 dark:text-gray-300">{t.description}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Visibility: <b>{t.isPublic ? "Public" : "Private"}</b>
-            </p>
-
-            <div className="mt-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Likes:
+        templates.length === 0 ? (
+          <p className="text-gray-700 dark:text-gray-300">No templates found.</p>
+        ) : (
+          templates.map((t) => (
+            <div key={t.$id} className="mb-6 p-4 border rounded bg-white dark:bg-[#1f1f24]">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t.title}</h3>
+              <p className="text-gray-700 dark:text-gray-300">{t.description}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Visibility: <b>{t.isPublic ? "Public" : "Private"}</b>
               </p>
-              <ul className="list-disc ml-5 text-sm text-blue-600 dark:text-blue-400">
-                {(likesMap[t.$id] || []).map((like) => (
-                  <li key={like.$id}>{usersMap[like.userId] || like.userId}</li>
-                ))}
-              </ul>
-            </div>
 
-            <div className="mt-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Comments:
-              </p>
-              <ul className="list-disc ml-5 text-sm text-gray-800 dark:text-gray-200">
-                {(commentsMap[t.$id] || []).map((c) => (
-                  <li key={c.$id}>{usersMap[c.userId] || c.userId}</li>
-                ))}
-              </ul>
+              <div className="mt-2">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Likes:</p>
+                <ul className="list-disc ml-5 text-sm text-blue-600 dark:text-blue-400">
+                  {(likesMap[t.$id] || []).map((like) => (
+                    <li key={like.$id}>{usersMap[like.userId] || like.userId}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-2">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Comments:</p>
+                <ul className="list-disc ml-5 text-sm text-gray-800 dark:text-gray-200">
+                  {(commentsMap[t.$id] || []).map((c) => (
+                    <li key={c.$id}>{usersMap[c.userId] || c.userId}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        ))
+          ))
+        )
       ) : (
-        forms.map((f) => (
-          <div key={f.$id} className="mb-6 p-4 border rounded bg-white dark:bg-[#1f1f24]">
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-              Filled by: {usersMap[f.createdBy] || f.createdBy}
-            </p>
-            <div className="mt-2">
-              <p className="font-semibold text-gray-800 dark:text-gray-200">Answers:</p>
-              <ul className="list-disc ml-6 text-sm text-gray-700 dark:text-gray-300">
-                {(f.answers || []).map((ans, i) => (
-                  <li key={i}>{ans}</li>
-                ))}
-              </ul>
+        forms.length === 0 ? (
+          <p className="text-gray-700 dark:text-gray-300">No forms found.</p>
+        ) : (
+          forms.map((f) => (
+            <div key={f.$id} className="mb-6 p-4 border rounded bg-white dark:bg-[#1f1f24]">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                Filled by: {usersMap[f.createdBy] || f.createdBy}
+              </p>
+              <div className="mt-2">
+                <p className="font-semibold text-gray-800 dark:text-gray-200">Answers:</p>
+                <ul className="list-disc ml-6 text-sm text-gray-700 dark:text-gray-300">
+                  {(f.answers || []).map((ans, i) => (
+                    <li key={i}>{ans}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        ))
+          ))
+        )
       )}
     </div>
   );
