@@ -1,49 +1,76 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../App";
+import { useAuth } from "./App"; // Adjust if stored elsewhere
+import { account } from "./lib/appwrite";
 
-export default function Header({ theme, setTheme, lang, setLang, t }) {
-  const { authUser } = useAuth();
-  const pathname = useLocation().pathname;
-  const isAdmin = authUser && authUser.isAdmin;
-  const isBlocked = authUser && authUser.isBlocked;
-  const isAuthed = !!authUser && !isBlocked;
+export default function Header() {
+  const { authUser, setAuthUser } = useAuth();
+  const location = useLocation();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const isAdmin = authUser?.isAdmin && !authUser?.isBlocked;
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await account.deleteSession("current");
+      setAuthUser(null);
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Logout failed", err);
+      setLoggingOut(false);
+    }
+  };
+
+  const isActive = (path) =>
+    location.pathname === path
+      ? "font-bold text-blue-600"
+      : "text-gray-700 dark:text-gray-300";
 
   return (
-    <header className="w-full border-b bg-white dark:bg-[#23232a]">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-2">
-        <nav className="flex items-center gap-6">
-          <Link to="/" className="font-semibold text-lg tracking-tight">FormBuilder</Link>
-          {isAuthed && (
+    <header className="w-full border-b bg-white dark:bg-[#18181b] shadow-sm">
+      <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-3">
+        {/* Navigation Left */}
+        <div className="flex items-center gap-6">
+          <Link to="/" className="text-xl font-bold text-gray-900 dark:text-white">FormBuilder</Link>
+          <Link to="/" className={isActive("/")}>Home</Link>
+          {authUser && (
             <>
-              <Link to="/template/create" className={pathname === "/template/create" ? "font-bold" : "font-normal"}>Create Template</Link>
-              <Link to="/dashboard" className={pathname === "/dashboard" ? "font-bold" : "font-normal"}>Dashboard</Link>
-              <Link to="/filled-forms" className={pathname === "/filled-forms" ? "font-bold" : "font-normal"}>Filled Forms</Link>
+              <Link to="/dashboard" className={isActive("/dashboard")}>Dashboard</Link>
+              <Link to="/template/create" className={isActive("/template/create")}>Create Template</Link>
+              {isAdmin && (
+                <Link to="/admin" className={isActive("/admin")}>Admin Panel</Link>
+              )}
             </>
           )}
-          {isAdmin && (
-            <Link to="/admin" className={pathname === "/admin" ? "font-bold" : "font-normal"}>Admin Panel</Link>
-          )}
-        </nav>
+        </div>
+
+        {/* Navigation Right */}
         <div className="flex items-center gap-4">
-          <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            title={theme === "light" ? t.dark : t.light}
-            className="px-2 py-1 rounded border bg-white dark:bg-[#23232a] text-sm">
-            {theme === "light" ? "🌙" : "☀️"}
-          </button>
-          <select value={lang} onChange={e => setLang(e.target.value)} className="px-2 py-1 rounded border bg-white dark:bg-[#23232a] text-sm">
-            <option value="en">EN</option>
-            <option value="uz">UZ</option>
-            <option value="ru">RU</option>
-          </select>
-          {!isAuthed && (
+          {authUser ? (
             <>
-              <Link to="/login" className="text-sm">Login</Link>
-              <Link to="/register" className="text-sm">Register</Link>
+              <Link
+                to={`/profile/${authUser.userId}`}
+                className="text-sm font-medium hover:underline text-gray-800 dark:text-gray-100"
+              >
+                {authUser.name}
+              </Link>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="text-sm font-medium text-red-600"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className={isActive("/login")}>Login</Link>
+              <Link to="/register" className={isActive("/register")}>Register</Link>
             </>
           )}
         </div>
       </div>
     </header>
   );
-} 
+}

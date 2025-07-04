@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { account, databases } from "../lib/appwrite";
 import { useNavigate } from "react-router-dom";
 import { ID, Query } from "appwrite";
+import { useAuth } from "../App"; // ✅ Import the Auth context
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setAuthUser } = useAuth(); // ✅ Use Auth context to update user state
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
@@ -31,6 +33,9 @@ export default function Login() {
       const user = await account.get();
       const authUserId = user.$id;
 
+      // ✅ Update auth context
+      setAuthUser(user);
+
       // Step 4: Check if user already exists in DB
       const res = await databases.listDocuments(dbId, usersCol, [
         Query.equal("authUserId", authUserId),
@@ -47,28 +52,33 @@ export default function Login() {
           avatarUrl: user.prefs?.avatarUrl || "",
           isAdmin: false,
           isBlocked: false,
-          language: "en",
-          theme: "light",
-          isApproved: false, // Optional: for admin-only access
         });
       }
 
       // Step 6: Redirect to dashboard
-      navigate("/dashboard");
+      navigate("/");
 
     } catch (err) {
       console.error("Login Error:", err);
-      setError(err.message || "Login failed. Please try again.");
+      if (err.message.includes("Unknown attribute")) {
+        setError("Invalid document structure: Unknown attribute(s) in user record.");
+      } else {
+        setError(err.message || "Login failed. Please try again.");
+      }
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fafafb]">
-      <div className="card" style={{ maxWidth: 400, width: "100%" }}>
-        <h2 style={{ textAlign: "center", marginBottom: 8 }}>Login</h2>
-        <p style={{ textAlign: "center", color: "#888", marginBottom: 24, fontSize: 15 }}>Sign in to your account</p>
-        {error && <p className="error">{error}</p>}
-        <form onSubmit={handleSubmit} autoComplete="off">
+    <div className="min-h-screen flex items-center justify-center transition-colors duration-300">
+      <div className="w-full max-w-md bg-white dark:bg-[#23232a] rounded-xl shadow-lg p-8 transition-colors duration-300">
+        <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100">Login</h2>
+        <p className="text-center text-gray-500 dark:text-gray-300 mb-6 text-base transition-colors duration-300">Sign in to your account</p>
+        {error && (
+          <p className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 px-3 py-2 rounded mb-4 text-center text-sm transition-colors duration-300">
+            {error}
+          </p>
+        )}
+        <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-4">
           <input
             name="email"
             type="email"
@@ -76,7 +86,7 @@ export default function Login() {
             value={form.email}
             onChange={handleChange}
             required
-            className="mb-3"
+            className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 transition-colors duration-300"
           />
           <input
             name="password"
@@ -85,14 +95,19 @@ export default function Login() {
             value={form.password}
             onChange={handleChange}
             required
-            className="mb-3"
+            className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 transition-colors duration-300"
           />
-          <button type="submit" className="w-full" style={{ marginTop: 8 }}>Login</button>
+          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-colors mt-2">
+            Login
+          </button>
         </form>
-        <div style={{ borderTop: "1px solid #eee", margin: "24px 0 0 0", paddingTop: 16, textAlign: "center" }}>
-          <span style={{ color: "#888", fontSize: 15 }}>Don't have an account?</span>
-          <button type="button" onClick={() => navigate("/register")}
-            style={{ background: "none", color: "#2563eb", border: "none", fontWeight: 500, marginLeft: 8, cursor: "pointer" }}>
+        <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-4 text-center transition-colors duration-300">
+          <span className="text-gray-500 dark:text-gray-300 text-sm">Don't have an account?</span>
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            className="ml-2 text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm bg-transparent border-none cursor-pointer transition-colors duration-300"
+          >
             Register
           </button>
         </div>
