@@ -38,19 +38,16 @@ export default function Register() {
       const user = await account.get();
       const authUserId = user.$id;
 
-      // ✅ Set the user context so the app updates immediately
-      setAuthUser(user);
-
       // Step 5: Check if user already exists in DB
       const res = await databases.listDocuments(dbId, usersCol, [
         Query.equal("authUserId", authUserId),
       ]);
 
-      const exists = res.documents.length > 0;
-
-      // Step 6: If not exists, create user document
-      if (!exists) {
-        await databases.createDocument(
+      let dbUser;
+      if (res.documents.length > 0) {
+        dbUser = res.documents[0];
+      } else {
+        dbUser = await databases.createDocument(
           dbId,
           usersCol,
           ID.unique(),
@@ -69,6 +66,15 @@ export default function Register() {
           ]
         );
       }
+
+      // ✅ Set authUser to DB user object for context (matches AuthProvider)
+      setAuthUser({
+        userId: dbUser.authUserId,
+        name: dbUser.name,
+        email: dbUser.email,
+        isAdmin: dbUser.isAdmin,
+        isBlocked: dbUser.isBlocked,
+      });
 
       // Step 7: Go to dashboard
       navigate("/");

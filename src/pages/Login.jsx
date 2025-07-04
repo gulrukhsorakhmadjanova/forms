@@ -33,19 +33,16 @@ export default function Login() {
       const user = await account.get();
       const authUserId = user.$id;
 
-      // ✅ Update auth context
-      setAuthUser(user);
-
       // Step 4: Check if user already exists in DB
       const res = await databases.listDocuments(dbId, usersCol, [
         Query.equal("authUserId", authUserId),
       ]);
 
-      const alreadyExists = res.documents.length > 0;
-
-      // Step 5: If not, create user record in DB
-      if (!alreadyExists) {
-        await databases.createDocument(dbId, usersCol, ID.unique(), {
+      let dbUser;
+      if (res.documents.length > 0) {
+        dbUser = res.documents[0];
+      } else {
+        dbUser = await databases.createDocument(dbId, usersCol, ID.unique(), {
           authUserId: authUserId,
           name: user.name || "Unnamed User",
           email: user.email,
@@ -54,6 +51,15 @@ export default function Login() {
           isBlocked: false,
         });
       }
+
+      // ✅ Set authUser to DB user object for context (matches AuthProvider)
+      setAuthUser({
+        userId: dbUser.authUserId,
+        name: dbUser.name,
+        email: dbUser.email,
+        isAdmin: dbUser.isAdmin,
+        isBlocked: dbUser.isBlocked,
+      });
 
       // Step 6: Redirect to dashboard
       navigate("/");

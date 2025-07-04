@@ -22,6 +22,7 @@ import BlockedPage from "./pages/BlockedPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import FilledFormsPage from "./pages/FilledFormsPage";
 
+
 // Contexts
 const AuthContext = createContext();
 
@@ -142,11 +143,13 @@ function Header() {
         <nav className="flex items-center gap-6 text-sm font-medium">
           <Link to="/" className="text-blue-600 dark:text-blue-400 font-bold text-lg">FormBuilder</Link>
           {isAdmin && (
-            <>
-              <Link to="/admin" className={location.pathname === "/admin" ? "underline" : ""}>{translations.en.adminPanel}</Link>
-            </>
+            <Link to="/admin" className={location.pathname === "/admin" ? "underline" : ""}>
+              {translations.en.adminPanel}
+            </Link>
           )}
-          <Link to="/template/create" className={location.pathname === "/template/create" ? "underline" : ""}>{translations.en.createTemplate}</Link>
+          <Link to="/template/create" className={location.pathname === "/template/create" ? "underline" : ""}>
+            {translations.en.createTemplate}
+          </Link>
         </nav>
         <div className="flex items-center gap-3">
           <select
@@ -186,28 +189,37 @@ function Header() {
   );
 }
 
-// App
+// Main App With Auth Loaded
+function AppWithAuth() {
+  const { loading } = useAuth();
+  if (loading) return <div className="text-center p-10">Loading...</div>;
+
+  return (
+    <Router>
+      <Header />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/template/create" element={<CreateTemplate />} />
+        <Route path="/template/:id" element={<TemplateViewPage />} />
+        <Route path="/template/:id/fill" element={<FillFormPage />} />
+        <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/profile/:userId" element={<UserProfilePage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/blocked" element={<BlockedPage />} />
+        <Route path="/filled-forms" element={<FilledFormsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Router>
+  );
+}
+
+// App Export
 export default function App() {
   return (
-        <AuthProvider>
-          <Router>
-            <Header />
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/template/create" element={<CreateTemplate />} />
-              <Route path="/template/:id" element={<TemplateViewPage />} />
-              <Route path="/template/:id/fill" element={<FillFormPage />} />
-              <Route path="/profile" element={<UserProfilePage />} />
-              <Route path="/profile/:userId" element={<UserProfilePage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/blocked" element={<BlockedPage />} />
-              <Route path="/filled-forms" element={<FilledFormsPage />} />
-
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Router>
-        </AuthProvider>
+    <AuthProvider>
+      <AppWithAuth />
+    </AuthProvider>
   );
 }
