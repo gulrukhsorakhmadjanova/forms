@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { databases } from "../lib/appwrite";
-import { useAuth } from "../App";
+import { useAuth, useTheme } from "../App";
+import { ID } from "appwrite";
 
 export default function TemplateViewPage() {
   const { id } = useParams();
   const { authUser } = useAuth();
+  const { isDark } = useTheme();
 
   const [template, setTemplate] = useState(null);
   const [likes, setLikes] = useState([]);
@@ -14,6 +16,8 @@ export default function TemplateViewPage() {
   const [usersMap, setUsersMap] = useState({});
   const [hasLiked, setHasLiked] = useState(false);
   const [likeDocId, setLikeDocId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const dbId = import.meta.env.VITE_APPWRITE_DB_ID;
   const templatesCol = import.meta.env.VITE_APPWRITE_TEMPLATES_COLLECTION_ID;
@@ -60,6 +64,7 @@ export default function TemplateViewPage() {
         }
       } catch (err) {
         console.error("Failed to fetch template details:", err);
+        setError("Failed to load template details");
       }
     }
 
@@ -67,115 +72,156 @@ export default function TemplateViewPage() {
   }, [id, authUser]);
 
   const handleLike = async () => {
-    if (!authUser) return alert("Please log in to like.");
+    if (!authUser) {
+      alert("Please log in to like templates.");
+      return;
+    }
 
-    if (hasLiked) {
-      await databases.deleteDocument(dbId, likesCol, likeDocId);
-      setLikes((prev) => prev.filter((l) => l.$id !== likeDocId));
-      setHasLiked(false);
-      setLikeDocId(null);
-    } else {
-      const newLike = await databases.createDocument(dbId, likesCol, "unique()", {
-        templateId: id,
-        userId: authUser.userId,
-        createdAt: new Date().toISOString(),
-      });
-      setLikes((prev) => [...prev, newLike]);
-      setHasLiked(true);
-      setLikeDocId(newLike.$id);
+    setLoading(true);
+    setError("");
+
+    try {
+      if (hasLiked) {
+        // Unlike: Delete the like document
+        await databases.deleteDocument(dbId, likesCol, likeDocId);
+        setLikes((prev) => prev.filter((l) => l.$id !== likeDocId));
+        setHasLiked(false);
+        setLikeDocId(null);
+      } else {
+        // Like: Create a new like document
+        const newLike = await databases.createDocument(
+          dbId, 
+          likesCol, 
+          ID.unique(), 
+          {
+            templateId: id,
+            userId: authUser.userId,
+          }
+        );
+        setLikes((prev) => [...prev, newLike]);
+        setHasLiked(true);
+        setLikeDocId(newLike.$id);
+      }
+    } catch (err) {
+      console.error("Like/Unlike error:", err);
+      setError(err.message || "Failed to update like status");
+    } finally {
+      setLoading(false);
     }
   };
 
   if (!template) {
-    return <div className="p-6 text-gray-700 dark:text-gray-200">Loading...</div>;
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
+        <div className={`p-6 text-center ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white dark:bg-[#1f1f27] text-gray-900 dark:text-gray-100 rounded-xl shadow-lg mt-10 space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold mb-2">{template.title}</h2>
-        <p className="text-lg text-gray-600 dark:text-gray-300">{template.description}</p>
-        <p className="text-sm text-gray-500 mt-1">Topic: <span className="font-medium">{template.topic}</span></p>
-        {template.imageUrl && (
-          <img
-            src={template.imageUrl}
-            alt="template"
-            className="my-4 rounded-lg shadow-md max-h-72 w-full object-cover"
-          />
-        )}
-        <div className="text-sm text-gray-500 mt-2">
-          Tags: <span className="text-gray-700 dark:text-gray-300">{template.tags?.join(", ") || "None"}</span>
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      <div className={`max-w-4xl mx-auto p-8 rounded-xl shadow-lg mt-10 space-y-8 transition-colors duration-300 ${
+        isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'
+      }`}>
+        <div>
+          <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{template.title}</h2>
+          <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{template.description}</p>
+          <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Topic: <span className="font-medium">{template.topic}</span></p>
+          {template.imageUrl && (
+            <img
+              src={template.imageUrl}
+              alt="template"
+              className="my-4 rounded-lg shadow-md max-h-72 w-full object-cover"
+            />
+          )}
+          <div className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            Tags: <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{template.tags?.join(", ") || "None"}</span>
+          </div>
         </div>
-      </div>
 
-      {/* Like Section */}
-      <div className="flex items-center justify-between">
-        {authUser && (
-          <button
-            onClick={handleLike}
-            className={`px-5 py-2 rounded-lg font-semibold transition ${
-              hasLiked
-                ? "bg-red-500 hover:bg-red-600 text-white"
-                : "bg-blue-600 hover:bg-blue-700 text-white"
-            }`}
-          >
-            {hasLiked ? "❤️ Unlike" : "🤍 Like"}
-          </button>
+        {/* Error Message */}
+        {error && (
+          <div className={`px-4 py-3 rounded transition-colors duration-300 ${
+            isDark ? 'bg-red-900 text-red-200 border border-red-700' : 'bg-red-100 text-red-700 border border-red-400'
+          }`}>
+            {error}
+          </div>
         )}
-        <p className="text-sm text-gray-600 dark:text-gray-300">Likes: {likes.length}</p>
-      </div>
 
-      {/* Users who liked */}
-      <div>
-        <h3 className="text-xl font-semibold mb-2">Liked by</h3>
-        {likes.length === 0 ? (
-          <p className="text-gray-500 italic">No one has liked this yet.</p>
-        ) : (
-          <ul className="list-disc ml-6 space-y-1 text-gray-800 dark:text-gray-200">
-            {likes.map((like) => (
-              <li key={like.$id}>{usersMap[like.userId] || "Unknown User"}</li>
-            ))}
-          </ul>
-        )}
-      </div>
+        {/* Like Section */}
+        <div className="flex items-center justify-between">
+          {authUser && (
+            <button
+              onClick={handleLike}
+              disabled={loading}
+              className={`px-5 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+                hasLiked
+                  ? "bg-red-500 hover:bg-red-600 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading ? "Loading..." : hasLiked ? "❤️ Unlike" : "🤍 Like"}
+            </button>
+          )}
+          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Likes: {likes.length}</p>
+        </div>
 
-      {/* Questions */}
-      <div>
-        <h3 className="text-xl font-semibold mb-2">Questions</h3>
-        {questions.length === 0 ? (
-          <p className="text-gray-500 italic">No questions added to this template.</p>
-        ) : (
-          <ul className="space-y-4">
-            {questions.map((q, i) => (
-              <li key={q.$id} className="bg-gray-100 dark:bg-[#2d2d3a] p-4 rounded-lg shadow-sm">
-                <p className="text-lg font-medium mb-1">{i + 1}. {q.title}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                  {q.description || "No description"}
-                </p>
-                <p className="text-xs text-gray-500">Type: {q.type}</p>
-                {q.options?.length > 0 && (
-                  <p className="text-sm mt-1">Options: <span className="text-gray-800 dark:text-gray-200">{q.options.join(", ")}</span></p>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        {}
+        <div>
+          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Liked by</h3>
+          {likes.length === 0 ? (
+            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No one has liked this yet.</p>
+          ) : (
+            <ul className={`list-disc ml-6 space-y-1 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+              {likes.map((like) => (
+                <li key={like.$id}>{usersMap[like.userId] || "Unknown User"}</li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      {/* Comments */}
-      <div>
-        <h3 className="text-xl font-semibold mb-2">Comments</h3>
-        {comments.length === 0 ? (
-          <p className="text-gray-500 italic">No comments yet.</p>
-        ) : (
-          <ul className="space-y-3 list-disc ml-6">
-            {comments.map((c) => (
-              <li key={c.$id} className="text-gray-800 dark:text-gray-200">
-                <strong>{usersMap[c.userId] || "Anonymous"}:</strong> {c.content}
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Questions */}
+        <div>
+          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Questions</h3>
+          {questions.length === 0 ? (
+            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No questions added to this template.</p>
+          ) : (
+            <ul className="space-y-4">
+              {questions.map((q, i) => (
+                <li key={q.$id} className={`p-4 rounded-lg shadow-sm transition-colors duration-300 ${
+                  isDark ? 'bg-gray-700 text-gray-100' : 'bg-gray-50 text-gray-900'
+                }`}>
+                  <p className={`text-lg font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{i + 1}. {q.title}</p>
+                  <p className={`text-sm mb-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {q.description || "No description"}
+                  </p>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Type: {q.type}</p>
+                  {q.options?.length > 0 && (
+                    <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Options: <span className={`${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{q.options.join(", ")}</span>
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Comments */}
+        <div>
+          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Comments</h3>
+          {comments.length === 0 ? (
+            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No comments yet.</p>
+          ) : (
+            <ul className="space-y-3 list-disc ml-6">
+              {comments.map((c) => (
+                <li key={c.$id} className={`${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                  <strong>{usersMap[c.userId] || "Anonymous"}:</strong> {c.content}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

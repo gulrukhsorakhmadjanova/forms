@@ -1,24 +1,64 @@
 @import "tailwindcss";
 
+/* Enhanced light mode styling */
+:root {
+  --tw-bg-opacity: 1;
+}
+
+/* Base styles with enhanced light/dark mode */
 body {
-  @apply transition-colors duration-300 bg-[#fafafa] text-[#111827] dark:bg-[#18181b] dark:text-[#f4f4f5] font-sans m-0;
+  @apply transition-colors duration-300 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 font-sans m-0;
 }
 
 * {
   @apply transition-colors duration-300;
 }
 
+/* Enhanced header with better light mode */
 .header {
-  @apply flex justify-between items-center px-6 py-3 bg-white border-b border-gray-200 dark:bg-[#23232a] dark:border-gray-800;
+  @apply flex justify-between items-center px-6 py-3 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-sm;
 }
 
 .header-left a {
-  @apply mr-4 no-underline text-blue-700 font-medium dark:text-blue-400;
+  @apply mr-4 no-underline text-blue-700 font-medium dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors;
 }
+
 .header-left a.active {
-  @apply underline;
+  @apply underline text-blue-800 dark:text-blue-300;
 }
 
 .header-right button {
-  @apply px-3 py-1 bg-transparent border border-gray-300 rounded-md cursor-pointer text-blue-700 dark:border-gray-700 dark:text-blue-400 transition-colors;
+  @apply px-3 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700;
+}
+
+/* Enhanced light mode card styles */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300;
+}
+
+/* Enhanced form inputs for light mode */
+input, textarea, select {
+  @apply border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 transition-colors;
+}
+
+/* Enhanced button styles for light mode */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors shadow-sm hover:shadow-md;
+}
+
+.btn-secondary {
+  @apply bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded transition-colors shadow-sm hover:shadow-md;
+}
+
+/* Enhanced table styles for light mode */
+.table-light {
+  @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700;
+}
+
+.table-header-light {
+  @apply bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200;
+}
+
+.table-row-light {
+  @apply border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800;
 }

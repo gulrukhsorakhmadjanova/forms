@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { databases } from "../lib/appwrite";
-import { useParams } from "react-router-dom";
 import { useAuth } from "../App";
+import { useTheme } from "../App";
 import { Query } from "appwrite";
 
 export default function FilledFormsPage() {
-  const { userId } = useParams();
   const { authUser } = useAuth();
+  const { isDark } = useTheme();
   const [forms, setForms] = useState([]);
   const [templatesMap, setTemplatesMap] = useState({});
   const [questionsMap, setQuestionsMap] = useState({});
-  const [loading, setLoading] = useState(true);
 
   const dbId = import.meta.env.VITE_APPWRITE_DB_ID;
   const formsCol = import.meta.env.VITE_APPWRITE_FORMS_COLLECTION_ID;
@@ -18,93 +17,109 @@ export default function FilledFormsPage() {
   const questionsCol = import.meta.env.VITE_APPWRITE_QUESTIONS_COLLECTION_ID;
 
   useEffect(() => {
-    const viewingUserId = userId || authUser?.userId;
-    if (!viewingUserId) return;
     async function fetchData() {
-      setLoading(true);
       try {
-        // 1. Get all forms filled by this user
-        const formsRes = await databases.listDocuments(dbId, formsCol, [
-          Query.equal("createdBy", viewingUserId),
+        const [formsRes, templatesRes, questionsRes] = await Promise.all([
+          databases.listDocuments(dbId, formsCol, [
+            Query.equal("createdBy", authUser.userId),
+          ]),
+          databases.listDocuments(dbId, templatesCol),
+          databases.listDocuments(dbId, questionsCol),
         ]);
-        const userForms = formsRes.documents;
-        setForms(userForms);
 
-        // 2. Get all unique templateIds
-        const templateIds = [...new Set(userForms.map((f) => f.templateId))];
-        // 3. Fetch all templates
-        const templateResults = await Promise.all(
-          templateIds.map((tid) => databases.getDocument(dbId, templatesCol, tid))
-        );
+        setForms(formsRes.documents);
+
         const tMap = {};
-        templateResults.forEach((t) => {
+        templatesRes.documents.forEach((t) => {
           tMap[t.$id] = t;
         });
         setTemplatesMap(tMap);
 
-        // 4. Fetch all questions for these templates
-        const allQuestions = await Promise.all(
-          templateIds.map((tid) =>
-            databases.listDocuments(dbId, questionsCol, [
-              Query.equal("templateId", tid),
-            ])
-          )
-        );
         const qMap = {};
-        allQuestions.forEach((qRes, idx) => {
-          qMap[templateIds[idx]] = qRes.documents.sort((a, b) => a.order - b.order);
+        questionsRes.documents.forEach((q) => {
+          if (!qMap[q.templateId]) qMap[q.templateId] = [];
+          qMap[q.templateId].push(q);
         });
         setQuestionsMap(qMap);
       } catch (err) {
-        setForms([]);
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch filled forms:", err);
       }
     }
-    fetchData();
-  }, [authUser, userId]);
 
-  if (!authUser && !userId) {
-    return <div className="p-8 text-center text-gray-600 dark:text-gray-300">Please log in to view filled forms.</div>;
-  }
+    if (authUser) {
+      fetchData();
+    }
+  }, [authUser]);
 
-  if (loading) {
-    return <div className="p-8 text-center text-gray-600 dark:text-gray-300">Loading filled forms...</div>;
+  // Helper function to parse formatted answer strings
+  const parseAnswers = (answersArray) => {
+    if (!Array.isArray(answersArray)) return [];
+    
+    return answersArray.map(answerStr => {
+      // Handle the format "Q: Question Title | A: Answer"
+      if (answerStr.includes('|')) {
+        const parts = answerStr.split('|');
+        if (parts.length >= 2) {
+          const question = parts[0].replace('Q:', '').trim();
+          const answer = parts[1].replace('A:', '').trim();
+          return { question, answer };
+        }
+      }
+      
+      // Handle "Open Answer: ..." format
+      if (answerStr.startsWith('Open Answer:')) {
+        return { question: 'Open Answer', answer: answerStr.replace('Open Answer:', '').trim() };
+      }
+      
+      // Fallback for other formats
+      return { question: 'Unknown Question', answer: answerStr };
+    });
+  };
+
+  if (!authUser) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
+        <div className={`text-center p-10`}>
+          Please log in to view your filled forms.
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-6 bg-white dark:bg-[#23232a] rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Filled Forms</h2>
-      {forms.length === 0 ? (
-        <p className="text-gray-600 dark:text-gray-300">No forms found.</p>
-      ) : (
-        <div className="space-y-8">
-          {forms.map((form) => {
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
+      <div className={`max-w-4xl mx-auto mt-8 p-6 rounded-xl shadow-lg transition-colors duration-300 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
+        <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Filled Forms</h2>
+        {forms.length === 0 ? (
+          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>No filled forms found.</p>
+        ) : (
+          forms.map((form) => {
             const template = templatesMap[form.templateId];
             const questions = questionsMap[form.templateId] || [];
+            const parsedAnswers = parseAnswers(form.answers);
+            
             return (
-              <div key={form.$id} className="border border-gray-200 dark:border-gray-700 p-4 rounded bg-gray-50 dark:bg-[#18181b]">
-                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
+              <div key={form.$id} className={`border p-4 rounded mb-4 transition-colors duration-300 ${isDark ? 'border-gray-700 bg-gray-900 text-gray-100' : 'border-gray-200 bg-gray-50 text-gray-900'}`}>
+                <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
                   Template: {template?.title || "Unknown Template"}
                 </h3>
-                <div className="mb-2 text-gray-700 dark:text-gray-300">
-                  <b>Description:</b> {template?.description || "No description"}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Answers:</h4>
-                  <ul className="list-disc ml-6 text-gray-900 dark:text-gray-100">
-                    {questions.map((q, idx) => (
-                      <li key={q.$id} className="mb-1">
-                        <b>{q.title}:</b> {form.answers?.[idx] || <span className="italic text-gray-400">No answer</span>}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="space-y-2">
+                  {parsedAnswers.map((answerObj, i) => (
+                    <div key={i}>
+                      <p className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                        {i + 1}. {answerObj.question}
+                      </p>
+                      <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Answer: {answerObj.answer || "No answer provided"}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 }

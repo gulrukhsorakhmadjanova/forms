@@ -1,86 +1,93 @@
 import React, { useState } from "react";
-import { account, databases } from "../lib/appwrite";
 import { useNavigate } from "react-router-dom";
-import { ID, Query } from "appwrite";
-import { useAuth } from "../App"; // ✅ Import the Auth context
+import { account, databases } from "../lib/appwrite";
+import { ID } from "appwrite";
+import { useAuth } from "../App";
+import { useLanguage } from "../App";
+import { useTheme } from "../App";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setAuthUser } = useAuth(); // ✅ Use Auth context to update user state
+  const { setAuthUser } = useAuth();
+  const { t } = useLanguage();
+  const { isDark } = useTheme();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const dbId = import.meta.env.VITE_APPWRITE_DB_ID;
-  const usersCol = import.meta.env.VITE_APPWRITE_USERS_COLLECTION_ID;
+  // Debug function to check environment variables
+  // Removed checkEnvironment and testConnection functions
 
-  const handleChange = (e) =>
+  // Check environment on component mount
+  // Removed useEffect for checkEnvironment
+
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      // Step 1: End current session if exists
-      try {
-        await account.deleteSession("current");
-      } catch (_) {}
+      // Validate environment variables
+      const dbId = import.meta.env.VITE_APPWRITE_DB_ID;
+      const usersCol = import.meta.env.VITE_APPWRITE_USERS_COLLECTION_ID;
+      
+      if (!dbId || !usersCol) {
+        setError("Configuration error. Please contact support.");
+        return;
+      }
 
-      // Step 2: Login
       await account.createEmailPasswordSession(form.email, form.password);
-
-      // Step 3: Get Appwrite Auth User
+      
       const user = await account.get();
-      const authUserId = user.$id;
+      const userId = user.$id;
 
-      // Step 4: Check if user already exists in DB
-      const res = await databases.listDocuments(dbId, usersCol, [
-        Query.equal("authUserId", authUserId),
-      ]);
+      const res = await databases.listDocuments(dbId, usersCol);
+      const dbUser = res.documents.find((u) => u.authUserId === userId);
 
-      let dbUser;
-      if (res.documents.length > 0) {
-        dbUser = res.documents[0];
-      } else {
-        dbUser = await databases.createDocument(dbId, usersCol, ID.unique(), {
-          authUserId: authUserId,
-          name: user.name || "Unnamed User",
-          email: user.email,
-          avatarUrl: user.prefs?.avatarUrl || "",
-          isAdmin: false,
-          isBlocked: false,
+      if (dbUser) {
+        if (dbUser.isBlocked) {
+          setError("Your account has been blocked.");
+          await account.deleteSession("current");
+          return;
+        }
+
+        setAuthUser({
+          userId,
+          name: dbUser.name,
+          email: dbUser.email,
+          isAdmin: dbUser.isAdmin,
+          isBlocked: dbUser.isBlocked,
         });
-      }
 
-      // ✅ Set authUser to DB user object for context (matches AuthProvider)
-      setAuthUser({
-        userId: dbUser.authUserId,
-        name: dbUser.name,
-        email: dbUser.email,
-        isAdmin: dbUser.isAdmin,
-        isBlocked: dbUser.isBlocked,
-      });
-
-      // Step 6: Redirect to dashboard
-      navigate("/");
-
-    } catch (err) {
-      console.error("Login Error:", err);
-      if (err.message.includes("Unknown attribute")) {
-        setError("Invalid document structure: Unknown attribute(s) in user record.");
+        navigate("/");
       } else {
-        setError(err.message || "Login failed. Please try again.");
+        setError("User not found in database.");
+        await account.deleteSession("current");
       }
+    } catch (err) {
+      setError("Invalid email or password.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center transition-colors duration-300">
-      <div className="w-full max-w-md bg-white dark:bg-[#23232a] rounded-xl shadow-lg p-8 transition-colors duration-300">
-        <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100">Login</h2>
-        <p className="text-center text-gray-500 dark:text-gray-300 mb-6 text-base transition-colors duration-300">Sign in to your account</p>
+    <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+      <div className={`w-full max-w-md rounded-xl shadow-xl p-8 transition-colors duration-300 border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+        <h2 className={`text-2xl font-bold text-center mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('login')}</h2>
+        <p className={`text-center mb-6 text-base transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{t('signInToAccount')}</p>
+        
+        {/* Debug Section */}
+        {/* Removed debug UI section */}
+        
         {error && (
-          <p className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 px-3 py-2 rounded mb-4 text-center text-sm transition-colors duration-300">
+          <p className={`px-3 py-2 rounded mb-4 text-center text-sm transition-colors duration-300 ${
+            isDark ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'
+          }`}>
             {error}
           </p>
         )}
@@ -88,33 +95,51 @@ export default function Login() {
           <input
             name="email"
             type="email"
-            placeholder="Email"
+            placeholder={t('email')}
             value={form.email}
             onChange={handleChange}
             required
-            className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 transition-colors duration-300"
+            disabled={loading}
+            className={`border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 transition-all duration-200 shadow-sm hover:shadow-md ${
+              isDark 
+                ? 'border-gray-600 bg-gray-900 text-gray-100' 
+                : 'border-gray-300 bg-white text-gray-900'
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           />
           <input
             name="password"
             type="password"
-            placeholder="Password"
+            placeholder={t('password')}
             value={form.password}
             onChange={handleChange}
             required
-            className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100 transition-colors duration-300"
+            disabled={loading}
+            className={`border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 transition-all duration-200 shadow-sm hover:shadow-md ${
+              isDark 
+                ? 'border-gray-600 bg-gray-900 text-gray-100' 
+                : 'border-gray-300 bg-white text-gray-900'
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           />
-          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-colors mt-2">
-            Login
+          <button 
+            type="submit" 
+            disabled={loading}
+            className={`w-full font-semibold py-3 rounded-lg transition-all duration-200 mt-2 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              loading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            {loading ? 'Logging in...' : t('login')}
           </button>
         </form>
-        <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-4 text-center transition-colors duration-300">
-          <span className="text-gray-500 dark:text-gray-300 text-sm">Don't have an account?</span>
+        <div className={`border-t mt-8 pt-4 text-center transition-colors duration-300 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{t('dontHaveAccount')}</span>
           <button
             type="button"
             onClick={() => navigate("/register")}
             className="ml-2 text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm bg-transparent border-none cursor-pointer transition-colors duration-300"
           >
-            Register
+            {t('register')}
           </button>
         </div>
       </div>

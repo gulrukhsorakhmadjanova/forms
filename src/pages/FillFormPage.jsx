@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ID, Query } from "appwrite";
 import { account, databases } from "../lib/appwrite";
+import { useTheme } from "../App";
 
 export default function FillFormPage() {
   const { id: templateId } = useParams();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
 
   const [template, setTemplate] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -101,130 +103,149 @@ export default function FillFormPage() {
     }
   };
 
-  if (loading) return <p className="text-gray-600 dark:text-gray-300">Loading...</p>;
-  if (error) return <p className="text-red-600 dark:text-red-400">{error}</p>;
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
+        <div className={`p-6 text-center ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Loading...</div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
+        <div className={`p-6 text-center ${isDark ? 'text-red-400' : 'text-red-600'}`}>{error}</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="card max-w-2xl mx-auto my-8 bg-white dark:bg-[#23232a] rounded-xl shadow-lg transition-colors duration-300 p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{template?.title}</h2>
-      <p className="mb-4 text-gray-700 dark:text-gray-300">{template?.description}</p>
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      <div className={`max-w-2xl mx-auto my-8 rounded-xl shadow-lg transition-colors duration-300 p-6 ${
+        isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'
+      }`}>
+        <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{template?.title}</h2>
+        <p className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{template?.description}</p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {questions.map((q) => (
-          <div key={q.$id} className="mb-2">
-            <label className="font-semibold text-gray-900 dark:text-gray-100">{q.title}</label>
-            <p className="text-gray-600 dark:text-gray-300 mb-1">{q.description}</p>
-            {q.type === "string-line" && (
-              <input
-                type="text"
-                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
-                value={answers[q.$id] || ""}
-                onChange={(e) => handleChange(q.$id, e.target.value)}
-              />
-            )}
-            {q.type === "multi-line" && (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {questions.map((q) => (
+            <div key={q.$id} className="mb-2">
+              <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{q.title}</label>
+              <p className={`mb-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{q.description}</p>
+              {q.type === "string-line" && (
+                <input
+                  type="text"
+                  className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
+                  value={answers[q.$id] || ""}
+                  onChange={(e) => handleChange(q.$id, e.target.value)}
+                />
+              )}
+              {q.type === "multi-line" && (
+                <textarea
+                  className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
+                  rows={4}
+                  value={answers[q.$id] || ""}
+                  onChange={(e) => handleChange(q.$id, e.target.value)}
+                />
+              )}
+              {q.type === "integer" && (
+                <input
+                  type="number"
+                  className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
+                  value={answers[q.$id] || ""}
+                  onChange={(e) => handleChange(q.$id, e.target.value)}
+                />
+              )}
+              {q.type === "checkbox" && ((Array.isArray(q.options) ? q.options : typeof q.options === 'string' ? q.options.split(',').map(o => o.trim()) : []).length > 0) ? (
+                <div className="flex flex-col gap-1">
+                  {(Array.isArray(q.options) ? q.options : typeof q.options === 'string' ? q.options.split(',').map(o => o.trim()) : []).map((opt, idx) => (
+                    <label key={idx} className={`flex items-center gap-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                      <input
+                        type="checkbox"
+                        checked={Array.isArray(answers[q.$id]) ? answers[q.$id].includes(opt) : false}
+                        onChange={e => {
+                          let prev = Array.isArray(answers[q.$id]) ? answers[q.$id] : [];
+                          if (e.target.checked) {
+                            prev = [...prev, opt];
+                          } else {
+                            prev = prev.filter(o => o !== opt);
+                          }
+                          handleChange(q.$id, prev);
+                        }}
+                        className="accent-blue-600"
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+              ) : q.type === "checkbox" && (!q.options || (Array.isArray(q.options) && q.options.length === 0) || (typeof q.options === 'string' && q.options.trim() === '')) ? (
+                <input
+                  type="checkbox"
+                  checked={answers[q.$id] || false}
+                  onChange={e => handleChange(q.$id, e.target.checked)}
+                  className="accent-blue-600"
+                />
+              ) : null}
+              {q.type === "drop-down" && (
+                <select
+                  className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
+                  value={answers[q.$id] || ""}
+                  onChange={(e) => handleChange(q.$id, e.target.value)}
+                >
+                  <option value="">Select...</option>
+                  {q.options?.map((opt, idx) => (
+                    <option key={idx} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          ))}
+
+          {/* ✅ Open Answer Input - Only show if no checkbox questions */}
+          {!questions.some(q => q.type === "checkbox") && (
+            <div className="mb-4">
+              <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Your Answer</label>
               <textarea
-                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
+                className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
                 rows={4}
-                value={answers[q.$id] || ""}
-                onChange={(e) => handleChange(q.$id, e.target.value)}
+                value={answers["open-answer"] || ""}
+                onChange={(e) => handleChange("open-answer", e.target.value)}
+                placeholder="Type your answer here..."
               />
-            )}
-            {q.type === "integer" && (
-              <input
-                type="number"
-                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
-                value={answers[q.$id] || ""}
-                onChange={(e) => handleChange(q.$id, e.target.value)}
-              />
-            )}
-            {q.type === "checkbox" && ((Array.isArray(q.options) ? q.options : typeof q.options === 'string' ? q.options.split(',').map(o => o.trim()) : []).length > 0) ? (
-              <div className="flex flex-col gap-1">
-                {(Array.isArray(q.options) ? q.options : typeof q.options === 'string' ? q.options.split(',').map(o => o.trim()) : []).map((opt, idx) => (
-                  <label key={idx} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={Array.isArray(answers[q.$id]) ? answers[q.$id].includes(opt) : false}
-                      onChange={e => {
-                        let prev = Array.isArray(answers[q.$id]) ? answers[q.$id] : [];
-                        if (e.target.checked) {
-                          prev = [...prev, opt];
-                        } else {
-                          prev = prev.filter(o => o !== opt);
-                        }
-                        handleChange(q.$id, prev);
-                      }}
-                      className="accent-blue-600"
-                    />
-                    {opt}
-                  </label>
-                ))}
-              </div>
-            ) : q.type === "checkbox" && (!q.options || (Array.isArray(q.options) && q.options.length === 0) || (typeof q.options === 'string' && q.options.trim() === '')) ? (
-              <input
-                type="checkbox"
-                checked={answers[q.$id] || false}
-                onChange={e => handleChange(q.$id, e.target.checked)}
-                className="accent-blue-600"
-              />
-            ) : null}
-            {q.type === "drow-down" && (
-              <select
-                className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
-                value={answers[q.$id] || ""}
-                onChange={(e) => handleChange(q.$id, e.target.value)}
-              >
-                <option value="">Select...</option>
-                {q.options?.map((opt, idx) => (
-                  <option key={idx} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            )}
+            </div>
+          )}
+
+          {/* ✅ Email Copy */}
+          <label className={`flex items-center gap-2 mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+            <input
+              type="checkbox"
+              checked={emailCopy}
+              onChange={(e) => setEmailCopy(e.target.checked)}
+              className="accent-blue-600"
+            />
+            Send me a copy of my responses
+          </label>
+
+          {/* ✅ Comment Field */}
+          <div className="mb-4">
+            <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Your Comment (optional)</label>
+            <textarea
+              className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
+              rows={3}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Leave your feedback..."
+            />
           </div>
-        ))}
 
-        {/* ✅ Open Answer Input */}
-        <div className="mb-4">
-          <label className="font-semibold text-gray-900 dark:text-gray-100">Your Answer</label>
-          <textarea
-            className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
-            rows={4}
-            value={answers["open-answer"] || ""}
-            onChange={(e) => handleChange("open-answer", e.target.value)}
-            placeholder="Type your answer here..."
-          />
-        </div>
-
-        {/* ✅ Email Copy */}
-        <label className="flex items-center gap-2 mb-4 text-gray-900 dark:text-gray-100">
-          <input
-            type="checkbox"
-            checked={emailCopy}
-            onChange={(e) => setEmailCopy(e.target.checked)}
-            className="accent-blue-600"
-          />
-          Send me a copy of my responses
-        </label>
-
-        {/* ✅ Comment Field */}
-        <div className="mb-4">
-          <label className="font-semibold text-gray-900 dark:text-gray-100">Your Comment (optional)</label>
-          <textarea
-            className="border border-gray-300 dark:border-gray-600 p-2 rounded w-full bg-white dark:bg-[#18181b] text-gray-900 dark:text-gray-100"
-            rows={3}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Leave your feedback..."
-          />
-        </div>
-
-        {/* ✅ Submit */}
-        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
-          Submit Form
-        </button>
-      </form>
+          {/* ✅ Submit */}
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
+            Submit Form
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

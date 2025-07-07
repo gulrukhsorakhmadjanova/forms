@@ -1,11 +1,51 @@
+// Fully merged AdminPage with UserDetailsPanel logic and dynamic styling for dark/light mode
 import React, { useEffect, useState } from "react";
-import { databases } from "../lib/appwrite"; 
-import { useAuth } from "../App"; 
-import { ID } from "appwrite";
-import { Link, useNavigate } from "react-router-dom";
-import { Query } from "appwrite";
+import { Databases, ID, Query } from "appwrite";
+import { useAuth, useTheme } from "../App";
+import { Link } from "react-router-dom";
+import { databases } from "../lib/appwrite"; // FIX 1: Import databases
+import PropTypes from "prop-types";
+
+function Toast({ message, onClose, type = "success" }) {
+  return (
+    <div className={`fixed top-6 right-6 z-50 px-4 py-2 rounded shadow-lg text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}
+         role="alert" aria-live="polite">
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-4 text-white font-bold" aria-label="Close notification">×</button>
+    </div>
+  );
+}
+
+function Skeleton({ className = "" }) {
+  return <div className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded ${className}`}></div>;
+}
+
+function EmptyState({ message }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-6 text-gray-400">
+      <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" /><path d="M8 12h8M8 16h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+      <span className="mt-2">{message}</span>
+    </div>
+  );
+}
+
+function ConfirmDialog({ open, message, onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-xl">
+        <div className="mb-4 text-gray-900 dark:text-gray-100">{message}</div>
+        <div className="flex gap-4 justify-end">
+          <button onClick={onCancel} className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100">Cancel</button>
+          <button onClick={onConfirm} className="px-4 py-2 rounded bg-red-600 text-white">Confirm</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function UserDetailsPanel({ user, dbId }) {
+  const { isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [allTemplates, setAllTemplates] = useState([]);
   const [forms, setForms] = useState([]);
@@ -21,7 +61,6 @@ function UserDetailsPanel({ user, dbId }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Add this line to fix the error:
   const templates = allTemplates.filter(t => t.createdBy === user.authUserId);
 
   useEffect(() => {
@@ -224,31 +263,31 @@ function UserDetailsPanel({ user, dbId }) {
     setCommentEdit({});
   }
 
-  if (loading) return <div className="p-4 text-gray-500">Loading user details...</div>;
+  if (loading) return <div className={`p-4 rounded-xl shadow bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300`}>Loading user details...</div>;
 
   return (
-    <div className="p-4 bg-gray-50 dark:bg-[#18181b] rounded border border-gray-200 dark:border-gray-700 mt-2">
+    <div className={`p-6 rounded-xl shadow transition-colors duration-300 border border-gray-200 dark:border-gray-700 mt-2 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
       {error && <div className="mb-2 text-red-600 dark:text-red-400">{error}</div>}
-      <div className="mb-2">
-        <b>Templates Created:</b>
+      <div className="mb-4">
+        <b className="block mb-1">Templates Created:</b>
         {templates.length === 0 ? (
           <span className="ml-2 text-gray-400">None</span>
         ) : (
           <ul className="list-disc ml-6">
             {templates.map(t => (
-              <li key={t.$id}>
+              <li key={t.$id} className="mb-1">
                 {editingTemplateId === t.$id ? (
                   <>
-                    <input name="title" value={templateEdit.title} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2" />
-                    <input name="description" value={templateEdit.description} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2" />
-                    <button onClick={() => handleTemplateSave(t)} disabled={saving} className="bg-green-600 text-white px-2 py-1 rounded mr-1">Save</button>
-                    <button onClick={handleTemplateCancel} className="bg-gray-400 text-white px-2 py-1 rounded">Cancel</button>
+                    <input name="title" value={templateEdit.title} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
+                    <input name="description" value={templateEdit.description} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
+                    <button onClick={() => handleTemplateSave(t)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">Save</button>
+                    <button onClick={handleTemplateCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">Cancel</button>
                   </>
                 ) : (
                   <>
-                    <Link to={`/template/${t.$id}`} className="text-blue-600 dark:text-blue-400 hover:underline">{t.title}</Link>
+                    <Link to={`/template/${t.$id}`} className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">{t.title}</Link>
                     <span className="ml-2 text-gray-600 dark:text-gray-300">{t.description}</span>
-                    <button onClick={() => handleTemplateEdit(t)} className="ml-2 bg-blue-600 text-white px-2 py-1 rounded">Edit</button>
+                    <button onClick={() => handleTemplateEdit(t)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">Edit</button>
                   </>
                 )}
               </li>
@@ -256,50 +295,50 @@ function UserDetailsPanel({ user, dbId }) {
           </ul>
         )}
       </div>
-      <div className="mb-2">
-        <b>All Templates (Like/Unlike):</b>
+      <div className="mb-4">
+        <b className="block mb-1">All Templates (Like/Unlike):</b>
         {allTemplates.length === 0 ? (
           <span className="ml-2 text-gray-400">None</span>
         ) : (
           <ul className="list-disc ml-6">
             {allTemplates.map(t => (
-              <li key={t.$id}>
+              <li key={t.$id} className="mb-1">
                 <span className="text-blue-600 dark:text-blue-400 font-semibold">{t.title}</span>
                 {likedTemplatesMap[t.$id] ? (
-                  <button onClick={() => handleUnlike(t.$id)} disabled={saving} className="ml-2 bg-red-600 text-white px-2 py-1 rounded">Unlike</button>
+                  <button onClick={() => handleUnlike(t.$id)} disabled={saving} className="ml-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">Unlike</button>
                 ) : (
-                  <button onClick={() => handleLike(t.$id)} disabled={saving} className="ml-2 bg-green-600 text-white px-2 py-1 rounded">Like</button>
+                  <button onClick={() => handleLike(t.$id)} disabled={saving} className="ml-2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded">Like</button>
                 )}
               </li>
             ))}
           </ul>
         )}
       </div>
-      <div className="mb-2">
-        <b>Forms Filled:</b>
+      <div className="mb-4">
+        <b className="block mb-1">Forms Filled:</b>
         {forms.length === 0 ? (
           <span className="ml-2 text-gray-400">None</span>
         ) : (
           <ul className="list-disc ml-6">
             {forms.map(f => (
-              <li key={f.$id}>
-                <span className="text-gray-800 dark:text-gray-200">Form ID: {f.$id}</span>
+              <li key={f.$id} className="mb-1">
+                <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Form ID: {f.$id}</span>
                 {editingFormId === f.$id ? (
                   <>
-                    <textarea value={formEdit.answers} onChange={handleFormEditChange} className="border rounded px-2 py-1 w-full mt-1" rows={3} />
-                    <button onClick={() => handleFormSave(f)} disabled={saving} className="bg-green-600 text-white px-2 py-1 rounded mr-1 mt-1">Save</button>
-                    <button onClick={handleFormCancel} className="bg-gray-400 text-white px-2 py-1 rounded mt-1">Cancel</button>
+                    <textarea value={formEdit.answers} onChange={handleFormEditChange} className="border rounded px-2 py-1 w-full mt-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" rows={3} />
+                    <button onClick={() => handleFormSave(f)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1 mt-1">Save</button>
+                    <button onClick={handleFormCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded mt-1">Cancel</button>
                   </>
                 ) : (
                   <>
                     {Array.isArray(f.answers) && f.answers.length > 0 && (
-                      <ul className="list-decimal ml-6 mt-1 text-sm text-gray-700 dark:text-gray-300">
+                      <ul className={`list-decimal ml-6 mt-1 text-sm ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
                         {f.answers.map((ans, idx) => (
                           <li key={idx}>{ans}</li>
                         ))}
                       </ul>
                     )}
-                    <button onClick={() => handleFormEdit(f)} className="ml-2 bg-blue-600 text-white px-2 py-1 rounded">Edit</button>
+                    <button onClick={() => handleFormEdit(f)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">Edit</button>
                   </>
                 )}
               </li>
@@ -307,24 +346,24 @@ function UserDetailsPanel({ user, dbId }) {
           </ul>
         )}
       </div>
-      <div className="mb-2">
-        <b>Comments Left:</b>
+      <div className="mb-4">
+        <b className="block mb-1">Comments Left:</b>
         {comments.length === 0 ? (
           <span className="ml-2 text-gray-400">None</span>
         ) : (
           <ul className="list-disc ml-6">
             {comments.map(c => (
-              <li key={c.$id}>
+              <li key={c.$id} className="mb-1">
                 {editingCommentId === c.$id ? (
                   <>
-                    <input value={commentEdit.content} onChange={handleCommentEditChange} className="border rounded px-2 py-1 mr-2" />
-                    <button onClick={() => handleCommentSave(c)} disabled={saving} className="bg-green-600 text-white px-2 py-1 rounded mr-1">Save</button>
-                    <button onClick={handleCommentCancel} className="bg-gray-400 text-white px-2 py-1 rounded">Cancel</button>
+                    <input value={commentEdit.content} onChange={handleCommentEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
+                    <button onClick={() => handleCommentSave(c)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">Save</button>
+                    <button onClick={handleCommentCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">Cancel</button>
                   </>
                 ) : (
                   <>
-                    <span className="text-gray-800 dark:text-gray-200">{c.content}</span>
-                    <button onClick={() => handleCommentEdit(c)} className="ml-2 bg-blue-600 text-white px-2 py-1 rounded">Edit</button>
+                    <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{c.content}</span>
+                    <button onClick={() => handleCommentEdit(c)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">Edit</button>
                   </>
                 )}
               </li>
@@ -333,7 +372,7 @@ function UserDetailsPanel({ user, dbId }) {
         )}
       </div>
       <div className="mb-2">
-        <b>Likes:</b>
+        <b className="block mb-1">Likes:</b>
         {likes.length === 0 ? (
           <span className="ml-2 text-gray-400">None</span>
         ) : (
@@ -342,8 +381,8 @@ function UserDetailsPanel({ user, dbId }) {
               // Find the template for this like
               const template = allTemplates.find(t => t.$id === like.templateId);
               return (
-                <li key={like.$id}>
-                  <span className="text-gray-800 dark:text-gray-200">
+                <li key={like.$id} className="mb-1">
+                  <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
                     {template ? template.title : "Unknown Template"}
                   </span>
                 </li>
@@ -356,139 +395,118 @@ function UserDetailsPanel({ user, dbId }) {
   );
 }
 
-function AdminPage() {
+UserDetailsPanel.propTypes = {
+  user: PropTypes.object.isRequired,
+  dbId: PropTypes.string.isRequired,
+};
+
+export default function AdminPage() {
   const { authUser } = useAuth();
-  const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [expandedUserId, setExpandedUserId] = useState(null);
+  const [error, setError] = useState(""); // FIX 3: Add error state for user list fetch
 
   const dbId = import.meta.env.VITE_APPWRITE_DB_ID;
   const usersCol = import.meta.env.VITE_APPWRITE_USERS_COLLECTION_ID;
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const fetch = async () => {
+      try {
+        const res = await databases.listDocuments(dbId, usersCol);
+        setUsers(res.documents);
+        setError("");
+      } catch (err) {
+        setError("Failed to load users");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [dbId, usersCol]);
 
-  async function fetchUsers() {
-    setLoading(true);
-    try {
-      const res = await databases.listDocuments(dbId, usersCol, []);
-      setUsers(res.documents);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handleEdit(u) {
+  const handleEdit = (u) => {
     setEditingId(u.$id);
-    setEditForm({ ...u });
-  }
+    setEditForm(u);
+  };
 
-  function handleCancel() {
-    setEditingId(null);
-    setEditForm({});
-  }
-
-  function handleChange(e) {
-    const { name, value, type, checked } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  }
-
-  async function handleSave() {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      const allowed = (({
-        name, email, isAdmin, isBlocked
-      }) => ({ name, email, isAdmin, isBlocked }))(editForm);
+      const allowed = (({ name, email, isAdmin, isBlocked }) => ({ name, email, isAdmin, isBlocked }))(editForm);
       await databases.updateDocument(dbId, usersCol, editingId, allowed);
       setEditingId(null);
       setEditForm({});
-      fetchUsers();
+      const res = await databases.listDocuments(dbId, usersCol);
+      setUsers(res.documents);
+      setError("");
     } catch (err) {
-      alert("Failed to update user: " + err.message);
+      setError("Failed to save user changes"); // FIX 2: Show error on save
     } finally {
       setSaving(false);
     }
-  }
+  };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto mt-8 bg-white dark:bg-[#23232a] rounded-xl shadow-lg transition-colors duration-300">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">👨‍💼 Admin Panel</h1>
-      {loading ? (
-        <p className="text-gray-600 dark:text-gray-300">Loading users...</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse bg-white dark:bg-[#18181b] rounded-lg shadow border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-            <thead>
-              <tr className="bg-gray-100 dark:bg-[#23232a]">
-                <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200">Name</th>
-                <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200">Email</th>
-                <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200">isAdmin</th>
-                <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200">isBlocked</th>
-                <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-200">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <React.Fragment key={u.$id}>
-                  <tr className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#23232a] transition-colors">
-                    {editingId === u.$id ? (
-                      <>
-                        <td className="px-4 py-2"><input name="name" value={editForm.name} onChange={handleChange} className="border rounded px-2 py-1 w-full" /></td>
-                        <td className="px-4 py-2"><input name="email" value={editForm.email} onChange={handleChange} className="border rounded px-2 py-1 w-full" /></td>
-                        <td className="px-4 py-2"><input type="checkbox" name="isAdmin" checked={!!editForm.isAdmin} onChange={handleChange} /></td>
-                        <td className="px-4 py-2"><input type="checkbox" name="isBlocked" checked={!!editForm.isBlocked} onChange={handleChange} /></td>
-                        <td className="px-4 py-2 flex gap-2">
-                          <button onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">Save</button>
-                          <button onClick={handleCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded">Cancel</button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-4 py-2 text-gray-900 dark:text-gray-100">
-                          <Link
-                            to={`/profile/${u.authUserId}`}
-                            className="hover:underline text-blue-600 dark:text-blue-400 cursor-pointer"
-                          >
-                            {u.name}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{u.email}</td>
-                        <td className="px-4 py-2">{u.isAdmin ? "✅" : "❌"}</td>
-                        <td className="px-4 py-2">{u.isBlocked === true ? "✅" : "❌"}</td>
-                        <td className="px-4 py-2 flex gap-2">
-                          <button onClick={() => handleEdit(u)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Edit</button>
-                          <button onClick={() => setExpandedUserId(expandedUserId === u.$id ? null : u.$id)} className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">
-                            {expandedUserId === u.$id ? "Hide" : "Details"}
-                          </button>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                  {expandedUserId === u.$id && (
-                    <tr>
-                      <td colSpan={5}>
-                        <UserDetailsPanel user={u} dbId={dbId} />
-                      </td>
+    <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      <div className={`p-6 max-w-4xl w-full mx-auto mt-8 rounded-xl shadow-lg transition-colors duration-300 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
+        <h1 className="text-2xl font-bold mb-6">👨‍💼 Admin Panel</h1>
+        {loading ? <p>Loading...</p> : (
+          <>
+            {error && <div className="mb-2 text-red-600">{error}</div>}
+            <table className={`w-full border-collapse rounded-lg shadow border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+              <thead>
+                <tr className={isDark ? 'bg-gray-900' : 'bg-gray-100'}>
+                  <th className="px-4 py-2 text-left">Name</th>
+                  <th className="px-4 py-2 text-left">Email</th>
+                  <th className="px-4 py-2 text-left">Admin</th>
+                  <th className="px-4 py-2 text-left">Blocked</th>
+                  <th className="px-4 py-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <React.Fragment key={u.$id}>
+                    <tr className={isDark ? 'border-gray-700 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'}>
+                      {editingId === u.$id ? (
+                        <>
+                          <td className="px-4 py-2"><input name="name" value={editForm.name || ""} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" /></td>
+                          <td className="px-4 py-2"><input name="email" value={editForm.email || ""} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="border rounded px-2 py-1 w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" /></td>
+                          <td className="px-4 py-2"><input type="checkbox" name="isAdmin" checked={!!editForm.isAdmin} onChange={(e) => setEditForm({ ...editForm, isAdmin: e.target.checked })} /></td>
+                          <td className="px-4 py-2"><input type="checkbox" name="isBlocked" checked={!!editForm.isBlocked} onChange={(e) => setEditForm({ ...editForm, isBlocked: e.target.checked })} /></td>
+                          <td className="px-4 py-2 flex gap-2">
+                            <button onClick={handleSave} disabled={saving} className="bg-green-600 text-white px-2 py-1 rounded">Save</button>
+                            <button onClick={() => setEditingId(null)} className="bg-gray-400 text-white px-2 py-1 rounded">Cancel</button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-4 py-2 text-blue-600 dark:text-blue-400"><Link to={`/profile/${u.authUserId}`}>{u.name}</Link></td>
+                          <td className="px-4 py-2">{u.email}</td>
+                          <td className="px-4 py-2">{u.isAdmin ? '✅' : '❌'}</td>
+                          <td className="px-4 py-2">{u.isBlocked ? '✅' : '❌'}</td>
+                          <td className="px-4 py-2 flex gap-2">
+                            <button onClick={() => handleEdit(u)} className="bg-blue-600 text-white px-2 py-1 rounded">Edit</button>
+                            <button onClick={() => setExpandedUserId(expandedUserId === u.$id ? null : u.$id)} className="bg-gray-600 text-white px-2 py-1 rounded">{expandedUserId === u.$id ? 'Hide' : 'Details'}</button>
+                          </td>
+                        </>
+                      )}
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                    {expandedUserId === u.$id && (
+                      <tr><td colSpan={5}><UserDetailsPanel user={u} dbId={dbId} /></td></tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+        {/* NOTE: To fully protect this page, wrap the /admin route in <ProtectedAdminRoute> in App.jsx */}
+      </div>
     </div>
   );
 }
-
-export default AdminPage;
