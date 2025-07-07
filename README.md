@@ -16,15 +16,7 @@ A modern React application for creating, sharing, and analyzing custom forms and
 Create a `.env` file in the root directory with the following variables:
 
 ```env
-VITE_APPWRITE_ENDPOINT=https://your-appwrite-endpoint.com/v1
-VITE_APPWRITE_PROJECT_ID=your-project-id
-VITE_APPWRITE_DB_ID=your-database-id
-VITE_APPWRITE_USERS_COLLECTION_ID=your-users-collection-id
-VITE_APPWRITE_TEMPLATES_COLLECTION_ID=your-templates-collection-id
-VITE_APPWRITE_QUESTIONS_COLLECTION_ID=your-questions-collection-id
-VITE_APPWRITE_FORMS_COLLECTION_ID=your-forms-collection-id
-VITE_APPWRITE_COMMENTS_COLLECTION_ID=your-comments-collection-id
-VITE_APPWRITE_LIKES_COLLECTION_ID=your-likes-collection-id
+
 ```
 
 ## Getting Started
