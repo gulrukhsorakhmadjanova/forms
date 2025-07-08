@@ -66,7 +66,6 @@ const translations = {
     dontHaveAccount: "Don't have an account?",
     name: "Name",
     areYouAdmin: "Are you an admin?",
-    adminRequestText: "Yes, I want to be an admin (requires approval)",
     alreadyHaveAccount: "Already have an account?",
     // CreateTemplate page
     description: "Description",
@@ -199,7 +198,6 @@ const translations = {
     dontHaveAccount: "Hisobingiz yo'qmi?",
     name: "Ism",
     areYouAdmin: "Siz adminmisiz?",
-    adminRequestText: "Ha, men admin bo'lishni xohlayman (tasdiq talab qilinadi)",
     alreadyHaveAccount: "Hisobingiz bormi?",
     // CreateTemplate page
     description: "Tavsif",
@@ -332,7 +330,6 @@ const translations = {
     dontHaveAccount: "Нет аккаунта?",
     name: "Имя",
     areYouAdmin: "Вы администратор?",
-    adminRequestText: "Да, я хочу быть администратором (требуется одобрение)",
     alreadyHaveAccount: "Уже есть аккаунт?",
     // CreateTemplate page
     description: "Описание",

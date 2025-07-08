@@ -121,13 +121,13 @@ export default function TemplateViewPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
-      <div className={`max-w-4xl mx-auto p-8 rounded-xl shadow-lg mt-10 space-y-8 transition-colors duration-300 ${
+      <div className={`max-w-4xl mx-auto p-8 rounded-xl shadow-lg mt-0 space-y-8 transition-colors duration-300 ${
         isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'
       }`}>
         <div>
           <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{template.title}</h2>
           <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{template.description}</p>
-          <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('topic')}: <span className="font-medium">{template.topic}</span></p>
+          <p className={`text-sm mt-0 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('topic')}: <span className="font-medium">{template.topic}</span></p>
           {template.imageUrl && (
             <img
               src={template.imageUrl}

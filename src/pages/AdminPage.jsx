@@ -1,9 +1,8 @@
-// Fully merged AdminPage with UserDetailsPanel logic and dynamic styling for dark/light mode
 import React, { useEffect, useState } from "react";
 import { Databases, ID, Query } from "appwrite";
 import { useAuth, useTheme, useLanguage } from "../App";
 import { Link } from "react-router-dom";
-import { databases } from "../lib/appwrite"; // FIX 1: Import databases
+import { databases } from "../lib/appwrite"; 
 import PropTypes from "prop-types";
 
 function Toast({ message, onClose, type = "success" }) {
@@ -507,7 +506,7 @@ export default function AdminPage() {
             </table>
           </>
         )}
-        {/* NOTE: To fully protect this page, wrap the /admin route in <ProtectedAdminRoute> in App.jsx */}
+        {}
       </div>
     </div>
   );

@@ -86,27 +86,27 @@ export default function UserProfilePage() {
   }, [authUser, userId]);
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
-      <div className={`max-w-4xl mx-auto mt-8 rounded-xl shadow-lg transition-colors duration-300 p-6 border ${
-        isDark
-          ? "bg-gray-800 text-gray-100 border-gray-700"
-          : "bg-white text-gray-900 border-gray-200"
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-gray-900 text-gray-100" : "bg-white text-gray-900"}`}>
+      <div className={`max-w-4xl mx-auto mt-0 rounded-xl shadow-lg p-6 transition-colors duration-300 ${
+        isDark ? "bg-gray-900 text-gray-100 border border-gray-700" : "bg-white text-gray-900 border border-gray-200"
       }`}>
+
+        {/* Header Section */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">
-            {userId && authUser?.userId !== userId ? t('userProfile') : t('myProfile')}
+            {userId && authUser?.userId !== userId ? t("userProfile") : t("myProfile")}
           </h2>
-
           {authUser && (
             <button
               onClick={() => navigate("/filled-forms")}
               className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
             >
-              {t('viewFilledForms')}
+              {t("viewFilledForms")}
             </button>
           )}
         </div>
 
+        {/* Tabs */}
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setTab("templates")}
@@ -118,7 +118,7 @@ export default function UserProfilePage() {
                 : "bg-gray-100 text-gray-900"
             }`}
           >
-            {t('templates')}
+            {t("templates")}
           </button>
           <button
             onClick={() => setTab("forms")}
@@ -130,30 +130,30 @@ export default function UserProfilePage() {
                 : "bg-gray-100 text-gray-900"
             }`}
           >
-            {t('forms')}
+            {t("forms")}
           </button>
         </div>
 
+        {/* Main Content */}
         {tab === "templates" ? (
           templates.length === 0 ? (
-            <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-              {t('noTemplatesFound')}
-            </p>
+            <p className={isDark ? "text-gray-300" : "text-gray-700"}>{t("noTemplatesFound")}</p>
           ) : (
             templates.map((t) => (
-              <div key={t.$id} className={`mb-6 p-4 border rounded transition-colors duration-300 ${
-                isDark
-                  ? "bg-gray-800 border-gray-700 text-gray-100"
-                  : "bg-white border-gray-200 text-gray-900"
-              }`}>
+              <div
+                key={t.$id}
+                className={`mb-6 p-4 border rounded transition-colors duration-300 ${
+                  isDark ? "bg-gray-800 border-gray-700 text-gray-100" : "bg-white border-gray-200 text-gray-900"
+                }`}
+              >
                 <h3 className="text-xl font-bold">{t.title}</h3>
                 <p className={isDark ? "text-gray-300" : "text-gray-700"}>{t.description}</p>
                 <p className={`text-sm mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                  {t('visibility')}: <b>{t.isPublic ? t('public') : t('private')}</b>
+                  {t("visibility")}: <b>{t.isPublic ? t("public") : t("private")}</b>
                 </p>
 
                 <div className="mt-2">
-                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t('likes')}:</p>
+                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t("likes")}:</p>
                   <ul className={`list-disc ml-5 text-sm ${isDark ? "text-blue-400" : "text-blue-600"}`}>
                     {(likesMap[t.$id] || []).map((like) => (
                       <li key={like.$id}>{usersMap[like.userId] || like.userId}</li>
@@ -162,7 +162,7 @@ export default function UserProfilePage() {
                 </div>
 
                 <div className="mt-2">
-                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t('comments')}:</p>
+                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t("comments")}:</p>
                   <ul className={`list-disc ml-5 text-sm ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                     {(commentsMap[t.$id] || []).map((c) => (
                       <li key={c.$id}>{usersMap[c.userId] || c.userId}</li>
@@ -173,23 +173,20 @@ export default function UserProfilePage() {
             ))
           )
         ) : forms.length === 0 ? (
-          <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-            {t('noFormsFound')}
-          </p>
+          <p className={isDark ? "text-gray-300" : "text-gray-700"}>{t("noFormsFound")}</p>
         ) : (
           forms.map((f) => (
-            <div key={f.$id} className={`mb-6 p-4 border rounded transition-colors duration-300 ${
-              isDark
-                ? "bg-gray-800 border-gray-700 text-gray-100"
-                : "bg-white border-gray-200 text-gray-900"
-            }`}>
+            <div
+              key={f.$id}
+              className={`mb-6 p-4 border rounded transition-colors duration-300 ${
+                isDark ? "bg-gray-800 border-gray-700 text-gray-100" : "bg-white border-gray-200 text-gray-900"
+              }`}
+            >
               <p className={`text-sm mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                {t('filledBy')}: {usersMap[f.createdBy] || f.createdBy}
+                {t("filledBy")}: {usersMap[f.createdBy] || f.createdBy}
               </p>
               <div className="mt-2">
-                <p className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-                  {t('answers')}:
-                </p>
+                <p className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{t("answers")}:</p>
                 <ul className={`list-disc ml-6 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   {(f.answers || []).map((ans, i) => (
                     <li key={i}>{ans}</li>

@@ -119,7 +119,7 @@ export default function Register() {
                 onChange={(e) => setIsAdmin(e.target.checked)}
                 className="accent-blue-600"
               />
-              {t('adminRequestText')}
+              
             </label>
           </div>
 

@@ -89,7 +89,7 @@ export default function FilledFormsPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
-      <div className={`max-w-4xl mx-auto mt-8 p-6 rounded-xl shadow-lg transition-colors duration-300 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
+      <div className={`max-w-4xl mx-auto mt-0 p-6 rounded-xl shadow-lg transition-colors duration-300 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
         <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('filledForms')}</h2>
         {forms.length === 0 ? (
           <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>{t('noFilledFormsFound')}</p>

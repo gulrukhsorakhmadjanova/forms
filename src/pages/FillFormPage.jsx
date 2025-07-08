@@ -111,7 +111,7 @@ export default function FillFormPage() {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
@@ -122,7 +122,7 @@ export default function FillFormPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
-      <div className={`max-w-2xl mx-auto my-8 rounded-xl shadow-lg transition-colors duration-300 p-6 ${
+      <div className={`max-w-2xl mx-auto mt-0 mb-8 rounded-xl shadow-lg transition-colors duration-300 p-6 ${
         isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'
       }`}>
         <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{template?.title}</h2>
@@ -204,7 +204,6 @@ export default function FillFormPage() {
             </div>
           ))}
 
-          {/* ✅ Open Answer Input - Only show if no checkbox questions */}
           {!questions.some(q => q.type === "checkbox") && (
             <div className="mb-4">
               <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('yourAnswer')}</label>
@@ -218,7 +217,6 @@ export default function FillFormPage() {
             </div>
           )}
 
-          {/* ✅ Email Copy */}
           <label className={`flex items-center gap-2 mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
             <input
               type="checkbox"
@@ -229,7 +227,6 @@ export default function FillFormPage() {
             {t('sendMeCopy')}
           </label>
 
-          {/* ✅ Comment Field */}
           <div className="mb-4">
             <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('yourComment')}</label>
             <textarea
@@ -241,7 +238,6 @@ export default function FillFormPage() {
             />
           </div>
 
-          {/* ✅ Submit */}
           <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
             {t('submitForm')}
           </button>
