@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ID, Query } from "appwrite";
 import { account, databases } from "../lib/appwrite";
-import { useTheme } from "../App";
+import { useTheme, useLanguage } from "../App";
 
 export default function FillFormPage() {
   const { id: templateId } = useParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
 
   const [template, setTemplate] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -29,7 +30,7 @@ export default function FillFormPage() {
       .get()
       .then((u) => setUser(u))
       .catch(() => {
-        alert("⚠️ Please log in to fill out the form.");
+        alert(t('pleaseLoginToFill'));
         navigate("/login");
       });
   }, []);
@@ -50,7 +51,7 @@ export default function FillFormPage() {
         setQuestions(qRes.documents);
       } catch (err) {
         console.error(err);
-        setError("Failed to load template.");
+        setError(t('failedToLoadTemplate'));
       }
       setLoading(false);
     };
@@ -95,18 +96,18 @@ export default function FillFormPage() {
         });
       }
 
-      alert("✅ Form and comment submitted!");
+      alert(t('formAndCommentSubmitted'));
       navigate("/filled-forms");
     } catch (err) {
       console.error(err);
-      setError(err.message || "Failed to submit form.");
+      setError(err.message || t('failedToSubmitForm'));
     }
   };
 
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
-        <div className={`p-6 text-center ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Loading...</div>
+        <div className={`p-6 text-center ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('loading')}</div>
       </div>
     );
   }
@@ -192,7 +193,7 @@ export default function FillFormPage() {
                   value={answers[q.$id] || ""}
                   onChange={(e) => handleChange(q.$id, e.target.value)}
                 >
-                  <option value="">Select...</option>
+                  <option value="">{t('select')}</option>
                   {q.options?.map((opt, idx) => (
                     <option key={idx} value={opt}>
                       {opt}
@@ -206,13 +207,13 @@ export default function FillFormPage() {
           {/* ✅ Open Answer Input - Only show if no checkbox questions */}
           {!questions.some(q => q.type === "checkbox") && (
             <div className="mb-4">
-              <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Your Answer</label>
+              <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('yourAnswer')}</label>
               <textarea
                 className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
                 rows={4}
                 value={answers["open-answer"] || ""}
                 onChange={(e) => handleChange("open-answer", e.target.value)}
-                placeholder="Type your answer here..."
+                placeholder={t('typeYourAnswerHere')}
               />
             </div>
           )}
@@ -225,24 +226,24 @@ export default function FillFormPage() {
               onChange={(e) => setEmailCopy(e.target.checked)}
               className="accent-blue-600"
             />
-            Send me a copy of my responses
+            {t('sendMeCopy')}
           </label>
 
           {/* ✅ Comment Field */}
           <div className="mb-4">
-            <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Your Comment (optional)</label>
+            <label className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('yourComment')}</label>
             <textarea
               className={`border p-2 rounded w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}
               rows={3}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Leave your feedback..."
+              placeholder={t('leaveYourFeedback')}
             />
           </div>
 
           {/* ✅ Submit */}
           <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
-            Submit Form
+            {t('submitForm')}
           </button>
         </form>
       </div>

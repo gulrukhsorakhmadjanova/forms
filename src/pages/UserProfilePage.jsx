@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { databases } from "../lib/appwrite";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth, useTheme } from "../App";
+import { useAuth, useTheme, useLanguage } from "../App";
 import { Query } from "appwrite";
 
 export default function UserProfilePage() {
   const { userId } = useParams();
   const { authUser } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [tab, setTab] = useState("templates");
 
@@ -93,7 +94,7 @@ export default function UserProfilePage() {
       }`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">
-            {userId && authUser?.userId !== userId ? "User Profile" : "My Profile"}
+            {userId && authUser?.userId !== userId ? t('userProfile') : t('myProfile')}
           </h2>
 
           {authUser && (
@@ -101,7 +102,7 @@ export default function UserProfilePage() {
               onClick={() => navigate("/filled-forms")}
               className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
             >
-              View Filled Forms
+              {t('viewFilledForms')}
             </button>
           )}
         </div>
@@ -117,7 +118,7 @@ export default function UserProfilePage() {
                 : "bg-gray-100 text-gray-900"
             }`}
           >
-            Templates
+            {t('templates')}
           </button>
           <button
             onClick={() => setTab("forms")}
@@ -129,14 +130,14 @@ export default function UserProfilePage() {
                 : "bg-gray-100 text-gray-900"
             }`}
           >
-            Forms
+            {t('forms')}
           </button>
         </div>
 
         {tab === "templates" ? (
           templates.length === 0 ? (
             <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-              No templates found.
+              {t('noTemplatesFound')}
             </p>
           ) : (
             templates.map((t) => (
@@ -148,11 +149,11 @@ export default function UserProfilePage() {
                 <h3 className="text-xl font-bold">{t.title}</h3>
                 <p className={isDark ? "text-gray-300" : "text-gray-700"}>{t.description}</p>
                 <p className={`text-sm mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                  Visibility: <b>{t.isPublic ? "Public" : "Private"}</b>
+                  {t('visibility')}: <b>{t.isPublic ? t('public') : t('private')}</b>
                 </p>
 
                 <div className="mt-2">
-                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Likes:</p>
+                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t('likes')}:</p>
                   <ul className={`list-disc ml-5 text-sm ${isDark ? "text-blue-400" : "text-blue-600"}`}>
                     {(likesMap[t.$id] || []).map((like) => (
                       <li key={like.$id}>{usersMap[like.userId] || like.userId}</li>
@@ -161,7 +162,7 @@ export default function UserProfilePage() {
                 </div>
 
                 <div className="mt-2">
-                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Comments:</p>
+                  <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t('comments')}:</p>
                   <ul className={`list-disc ml-5 text-sm ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                     {(commentsMap[t.$id] || []).map((c) => (
                       <li key={c.$id}>{usersMap[c.userId] || c.userId}</li>
@@ -173,7 +174,7 @@ export default function UserProfilePage() {
           )
         ) : forms.length === 0 ? (
           <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-            No forms found.
+            {t('noFormsFound')}
           </p>
         ) : (
           forms.map((f) => (
@@ -183,11 +184,11 @@ export default function UserProfilePage() {
                 : "bg-white border-gray-200 text-gray-900"
             }`}>
               <p className={`text-sm mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                Filled by: {usersMap[f.createdBy] || f.createdBy}
+                {t('filledBy')}: {usersMap[f.createdBy] || f.createdBy}
               </p>
               <div className="mt-2">
                 <p className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-                  Answers:
+                  {t('answers')}:
                 </p>
                 <ul className={`list-disc ml-6 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   {(f.answers || []).map((ans, i) => (

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { databases } from "../lib/appwrite";
 import { useAuth } from "../App";
-import { useTheme } from "../App";
+import { useTheme, useLanguage } from "../App";
 import { Query } from "appwrite";
 
 export default function FilledFormsPage() {
   const { authUser } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [forms, setForms] = useState([]);
   const [templatesMap, setTemplatesMap] = useState({});
   const [questionsMap, setQuestionsMap] = useState({});
@@ -68,11 +69,11 @@ export default function FilledFormsPage() {
       
       // Handle "Open Answer: ..." format
       if (answerStr.startsWith('Open Answer:')) {
-        return { question: 'Open Answer', answer: answerStr.replace('Open Answer:', '').trim() };
+        return { question: t('openAnswer'), answer: answerStr.replace('Open Answer:', '').trim() };
       }
       
       // Fallback for other formats
-      return { question: 'Unknown Question', answer: answerStr };
+      return { question: t('unknownQuestion'), answer: answerStr };
     });
   };
 
@@ -80,7 +81,7 @@ export default function FilledFormsPage() {
     return (
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
         <div className={`text-center p-10`}>
-          Please log in to view your filled forms.
+          {t('pleaseLoginToView')}
         </div>
       </div>
     );
@@ -89,9 +90,9 @@ export default function FilledFormsPage() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
       <div className={`max-w-4xl mx-auto mt-8 p-6 rounded-xl shadow-lg transition-colors duration-300 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
-        <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Filled Forms</h2>
+        <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('filledForms')}</h2>
         {forms.length === 0 ? (
-          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>No filled forms found.</p>
+          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>{t('noFilledFormsFound')}</p>
         ) : (
           forms.map((form) => {
             const template = templatesMap[form.templateId];
@@ -101,7 +102,7 @@ export default function FilledFormsPage() {
             return (
               <div key={form.$id} className={`border p-4 rounded mb-4 transition-colors duration-300 ${isDark ? 'border-gray-700 bg-gray-900 text-gray-100' : 'border-gray-200 bg-gray-50 text-gray-900'}`}>
                 <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
-                  Template: {template?.title || "Unknown Template"}
+                  {t('template')}: {template?.title || t('unknownTemplate')}
                 </h3>
                 <div className="space-y-2">
                   {parsedAnswers.map((answerObj, i) => (
@@ -110,7 +111,7 @@ export default function FilledFormsPage() {
                         {i + 1}. {answerObj.question}
                       </p>
                       <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Answer: {answerObj.answer || "No answer provided"}
+                        {t('answer')}: {answerObj.answer || t('noAnswerProvided')}
                       </p>
                     </div>
                   ))}

@@ -1,7 +1,7 @@
 // Fully merged AdminPage with UserDetailsPanel logic and dynamic styling for dark/light mode
 import React, { useEffect, useState } from "react";
 import { Databases, ID, Query } from "appwrite";
-import { useAuth, useTheme } from "../App";
+import { useAuth, useTheme, useLanguage } from "../App";
 import { Link } from "react-router-dom";
 import { databases } from "../lib/appwrite"; // FIX 1: Import databases
 import PropTypes from "prop-types";
@@ -46,6 +46,7 @@ function ConfirmDialog({ open, message, onConfirm, onCancel }) {
 
 function UserDetailsPanel({ user, dbId }) {
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [allTemplates, setAllTemplates] = useState([]);
   const [forms, setForms] = useState([]);
@@ -137,7 +138,7 @@ function UserDetailsPanel({ user, dbId }) {
       setLikes(likesRes.documents);
       setLikedTemplatesMap(likedTemplatesMap);
     } catch (err) {
-      setError("Failed to refresh details: " + err.message);
+      setError(t('failedToRefreshDetails') + ": " + err.message);
     } finally {
       setLoading(false);
     }
@@ -153,7 +154,7 @@ function UserDetailsPanel({ user, dbId }) {
       });
       await refreshDetails();
     } catch (err) {
-      setError("Failed to like template: " + (err.message || err.toString()));
+      setError(t('failedToLikeTemplate') + ": " + (err.message || err.toString()));
     } finally {
       setSaving(false);
     }
@@ -169,7 +170,7 @@ function UserDetailsPanel({ user, dbId }) {
       }
       await refreshDetails();
     } catch (err) {
-      setError("Failed to unlike template: " + (err.message || err.toString()));
+      setError(t('failedToUnlikeTemplate') + ": " + (err.message || err.toString()));
     } finally {
       setSaving(false);
     }
@@ -195,7 +196,7 @@ function UserDetailsPanel({ user, dbId }) {
       setTemplateEdit({});
       await refreshDetails();
     } catch (err) {
-      setError("Failed to save template: " + (err.message || err.toString()));
+      setError(t('failedToSaveTemplate') + ": " + (err.message || err.toString()));
     } finally {
       setSaving(false);
     }
@@ -224,7 +225,7 @@ function UserDetailsPanel({ user, dbId }) {
       setFormEdit({});
       await refreshDetails();
     } catch (err) {
-      setError("Failed to save form: " + (err.message || err.toString()));
+      setError(t('failedToSaveForm') + ": " + (err.message || err.toString()));
     } finally {
       setSaving(false);
     }
@@ -253,7 +254,7 @@ function UserDetailsPanel({ user, dbId }) {
       setCommentEdit({});
       await refreshDetails();
     } catch (err) {
-      setError("Failed to save comment: " + (err.message || err.toString()));
+      setError(t('failedToSaveComment') + ": " + (err.message || err.toString()));
     } finally {
       setSaving(false);
     }
@@ -263,15 +264,15 @@ function UserDetailsPanel({ user, dbId }) {
     setCommentEdit({});
   }
 
-  if (loading) return <div className={`p-4 rounded-xl shadow bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300`}>Loading user details...</div>;
+  if (loading) return <div className={`p-4 rounded-xl shadow bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300`}>{t('loadingUserDetails')}</div>;
 
   return (
     <div className={`p-6 rounded-xl shadow transition-colors duration-300 border border-gray-200 dark:border-gray-700 mt-2 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
       {error && <div className="mb-2 text-red-600 dark:text-red-400">{error}</div>}
       <div className="mb-4">
-        <b className="block mb-1">Templates Created:</b>
+        <b className="block mb-1">{t('templatesCreated')}:</b>
         {templates.length === 0 ? (
-          <span className="ml-2 text-gray-400">None</span>
+          <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
             {templates.map(t => (
@@ -280,14 +281,14 @@ function UserDetailsPanel({ user, dbId }) {
                   <>
                     <input name="title" value={templateEdit.title} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
                     <input name="description" value={templateEdit.description} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
-                    <button onClick={() => handleTemplateSave(t)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">Save</button>
-                    <button onClick={handleTemplateCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">Cancel</button>
+                    <button onClick={() => handleTemplateSave(t)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">{t('save')}</button>
+                    <button onClick={handleTemplateCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">{t('cancel')}</button>
                   </>
                 ) : (
                   <>
                     <Link to={`/template/${t.$id}`} className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">{t.title}</Link>
                     <span className="ml-2 text-gray-600 dark:text-gray-300">{t.description}</span>
-                    <button onClick={() => handleTemplateEdit(t)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">Edit</button>
+                    <button onClick={() => handleTemplateEdit(t)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
                   </>
                 )}
               </li>
@@ -296,18 +297,18 @@ function UserDetailsPanel({ user, dbId }) {
         )}
       </div>
       <div className="mb-4">
-        <b className="block mb-1">All Templates (Like/Unlike):</b>
+        <b className="block mb-1">{t('allTemplates')}:</b>
         {allTemplates.length === 0 ? (
-          <span className="ml-2 text-gray-400">None</span>
+          <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
             {allTemplates.map(t => (
               <li key={t.$id} className="mb-1">
                 <span className="text-blue-600 dark:text-blue-400 font-semibold">{t.title}</span>
                 {likedTemplatesMap[t.$id] ? (
-                  <button onClick={() => handleUnlike(t.$id)} disabled={saving} className="ml-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">Unlike</button>
+                  <button onClick={() => handleUnlike(t.$id)} disabled={saving} className="ml-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">{t('unlike')}</button>
                 ) : (
-                  <button onClick={() => handleLike(t.$id)} disabled={saving} className="ml-2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded">Like</button>
+                  <button onClick={() => handleLike(t.$id)} disabled={saving} className="ml-2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded">{t('like')}</button>
                 )}
               </li>
             ))}
@@ -315,9 +316,9 @@ function UserDetailsPanel({ user, dbId }) {
         )}
       </div>
       <div className="mb-4">
-        <b className="block mb-1">Forms Filled:</b>
+        <b className="block mb-1">{t('formsFilled')}:</b>
         {forms.length === 0 ? (
-          <span className="ml-2 text-gray-400">None</span>
+          <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
             {forms.map(f => (
@@ -326,8 +327,8 @@ function UserDetailsPanel({ user, dbId }) {
                 {editingFormId === f.$id ? (
                   <>
                     <textarea value={formEdit.answers} onChange={handleFormEditChange} className="border rounded px-2 py-1 w-full mt-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" rows={3} />
-                    <button onClick={() => handleFormSave(f)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1 mt-1">Save</button>
-                    <button onClick={handleFormCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded mt-1">Cancel</button>
+                    <button onClick={() => handleFormSave(f)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1 mt-1">{t('save')}</button>
+                    <button onClick={handleFormCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded mt-1">{t('cancel')}</button>
                   </>
                 ) : (
                   <>
@@ -338,7 +339,7 @@ function UserDetailsPanel({ user, dbId }) {
                         ))}
                       </ul>
                     )}
-                    <button onClick={() => handleFormEdit(f)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">Edit</button>
+                    <button onClick={() => handleFormEdit(f)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
                   </>
                 )}
               </li>
@@ -347,9 +348,9 @@ function UserDetailsPanel({ user, dbId }) {
         )}
       </div>
       <div className="mb-4">
-        <b className="block mb-1">Comments Left:</b>
+        <b className="block mb-1">{t('commentsLeft')}:</b>
         {comments.length === 0 ? (
-          <span className="ml-2 text-gray-400">None</span>
+          <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
             {comments.map(c => (
@@ -357,13 +358,13 @@ function UserDetailsPanel({ user, dbId }) {
                 {editingCommentId === c.$id ? (
                   <>
                     <input value={commentEdit.content} onChange={handleCommentEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
-                    <button onClick={() => handleCommentSave(c)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">Save</button>
-                    <button onClick={handleCommentCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">Cancel</button>
+                    <button onClick={() => handleCommentSave(c)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">{t('save')}</button>
+                    <button onClick={handleCommentCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">{t('cancel')}</button>
                   </>
                 ) : (
                   <>
                     <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{c.content}</span>
-                    <button onClick={() => handleCommentEdit(c)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">Edit</button>
+                    <button onClick={() => handleCommentEdit(c)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
                   </>
                 )}
               </li>
@@ -372,9 +373,9 @@ function UserDetailsPanel({ user, dbId }) {
         )}
       </div>
       <div className="mb-2">
-        <b className="block mb-1">Likes:</b>
+        <b className="block mb-1">{t('likes')}:</b>
         {likes.length === 0 ? (
-          <span className="ml-2 text-gray-400">None</span>
+          <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
             {likes.map(like => {
@@ -383,7 +384,7 @@ function UserDetailsPanel({ user, dbId }) {
               return (
                 <li key={like.$id} className="mb-1">
                   <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
-                    {template ? template.title : "Unknown Template"}
+                    {template ? template.title : t('unknownTemplate')}
                   </span>
                 </li>
               );
@@ -403,6 +404,7 @@ UserDetailsPanel.propTypes = {
 export default function AdminPage() {
   const { authUser } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -421,7 +423,7 @@ export default function AdminPage() {
         setUsers(res.documents);
         setError("");
       } catch (err) {
-        setError("Failed to load users");
+        setError(t('failedToLoadUsers'));
       } finally {
         setLoading(false);
       }
@@ -445,7 +447,7 @@ export default function AdminPage() {
       setUsers(res.documents);
       setError("");
     } catch (err) {
-      setError("Failed to save user changes"); // FIX 2: Show error on save
+      setError(t('failedToSaveUserChanges')); // FIX 2: Show error on save
     } finally {
       setSaving(false);
     }
@@ -454,18 +456,18 @@ export default function AdminPage() {
   return (
     <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
       <div className={`p-6 max-w-4xl w-full mx-auto mt-8 rounded-xl shadow-lg transition-colors duration-300 ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
-        <h1 className="text-2xl font-bold mb-6">👨‍💼 Admin Panel</h1>
-        {loading ? <p>Loading...</p> : (
+        <h1 className="text-2xl font-bold mb-6">👨‍💼 {t('adminPanel')}</h1>
+        {loading ? <p>{t('loading')}</p> : (
           <>
             {error && <div className="mb-2 text-red-600">{error}</div>}
             <table className={`w-full border-collapse rounded-lg shadow border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
               <thead>
                 <tr className={isDark ? 'bg-gray-900' : 'bg-gray-100'}>
-                  <th className="px-4 py-2 text-left">Name</th>
-                  <th className="px-4 py-2 text-left">Email</th>
+                  <th className="px-4 py-2 text-left">{t('name')}</th>
+                  <th className="px-4 py-2 text-left">{t('email')}</th>
                   <th className="px-4 py-2 text-left">Admin</th>
                   <th className="px-4 py-2 text-left">Blocked</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
+                  <th className="px-4 py-2 text-left">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -479,8 +481,8 @@ export default function AdminPage() {
                           <td className="px-4 py-2"><input type="checkbox" name="isAdmin" checked={!!editForm.isAdmin} onChange={(e) => setEditForm({ ...editForm, isAdmin: e.target.checked })} /></td>
                           <td className="px-4 py-2"><input type="checkbox" name="isBlocked" checked={!!editForm.isBlocked} onChange={(e) => setEditForm({ ...editForm, isBlocked: e.target.checked })} /></td>
                           <td className="px-4 py-2 flex gap-2">
-                            <button onClick={handleSave} disabled={saving} className="bg-green-600 text-white px-2 py-1 rounded">Save</button>
-                            <button onClick={() => setEditingId(null)} className="bg-gray-400 text-white px-2 py-1 rounded">Cancel</button>
+                            <button onClick={handleSave} disabled={saving} className="bg-green-600 text-white px-2 py-1 rounded">{t('save')}</button>
+                            <button onClick={() => setEditingId(null)} className="bg-gray-400 text-white px-2 py-1 rounded">{t('cancel')}</button>
                           </td>
                         </>
                       ) : (
@@ -490,8 +492,8 @@ export default function AdminPage() {
                           <td className="px-4 py-2">{u.isAdmin ? '✅' : '❌'}</td>
                           <td className="px-4 py-2">{u.isBlocked ? '✅' : '❌'}</td>
                           <td className="px-4 py-2 flex gap-2">
-                            <button onClick={() => handleEdit(u)} className="bg-blue-600 text-white px-2 py-1 rounded">Edit</button>
-                            <button onClick={() => setExpandedUserId(expandedUserId === u.$id ? null : u.$id)} className="bg-gray-600 text-white px-2 py-1 rounded">{expandedUserId === u.$id ? 'Hide' : 'Details'}</button>
+                            <button onClick={() => handleEdit(u)} className="bg-blue-600 text-white px-2 py-1 rounded">{t('edit')}</button>
+                            <button onClick={() => setExpandedUserId(expandedUserId === u.$id ? null : u.$id)} className="bg-gray-600 text-white px-2 py-1 rounded">{expandedUserId === u.$id ? t('hide') : t('details')}</button>
                           </td>
                         </>
                       )}

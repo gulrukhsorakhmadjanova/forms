@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { databases } from "../lib/appwrite";
-import { useAuth, useTheme } from "../App";
+import { useAuth, useTheme, useLanguage } from "../App";
 import { ID } from "appwrite";
 
 export default function TemplateViewPage() {
   const { id } = useParams();
   const { authUser } = useAuth();
   const { isDark } = useTheme();
+  const { t } = useLanguage();
 
   const [template, setTemplate] = useState(null);
   const [likes, setLikes] = useState([]);
@@ -113,7 +114,7 @@ export default function TemplateViewPage() {
   if (!template) {
     return (
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
-        <div className={`p-6 text-center ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Loading...</div>
+        <div className={`p-6 text-center ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>{t('loading')}</div>
       </div>
     );
   }
@@ -126,7 +127,7 @@ export default function TemplateViewPage() {
         <div>
           <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{template.title}</h2>
           <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{template.description}</p>
-          <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Topic: <span className="font-medium">{template.topic}</span></p>
+          <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('topic')}: <span className="font-medium">{template.topic}</span></p>
           {template.imageUrl && (
             <img
               src={template.imageUrl}
@@ -135,7 +136,7 @@ export default function TemplateViewPage() {
             />
           )}
           <div className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            Tags: <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{template.tags?.join(", ") || "None"}</span>
+            {t('tags')}: <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{template.tags?.join(", ") || t('none')}</span>
           </div>
         </div>
 
@@ -160,21 +161,21 @@ export default function TemplateViewPage() {
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {loading ? "Loading..." : hasLiked ? "❤️ Unlike" : "🤍 Like"}
+              {loading ? t('loading') : hasLiked ? "❤️ " + t('unlike') : "🤍 " + t('like')}
             </button>
           )}
-          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Likes: {likes.length}</p>
+          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t('likes')}: {likes.length}</p>
         </div>
 
-        {}
+        {/* Liked by section */}
         <div>
-          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Liked by</h3>
+          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('likedBy')}</h3>
           {likes.length === 0 ? (
-            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No one has liked this yet.</p>
+            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noOneLikedYet')}</p>
           ) : (
             <ul className={`list-disc ml-6 space-y-1 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
               {likes.map((like) => (
-                <li key={like.$id}>{usersMap[like.userId] || "Unknown User"}</li>
+                <li key={like.$id}>{usersMap[like.userId] || t('unknownUser')}</li>
               ))}
             </ul>
           )}
@@ -182,9 +183,9 @@ export default function TemplateViewPage() {
 
         {/* Questions */}
         <div>
-          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Questions</h3>
+          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('questions')}</h3>
           {questions.length === 0 ? (
-            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No questions added to this template.</p>
+            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noQuestionsAdded')}</p>
           ) : (
             <ul className="space-y-4">
               {questions.map((q, i) => (
@@ -193,12 +194,12 @@ export default function TemplateViewPage() {
                 }`}>
                   <p className={`text-lg font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{i + 1}. {q.title}</p>
                   <p className={`text-sm mb-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {q.description || "No description"}
+                    {q.description || t('noDescription')}
                   </p>
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Type: {q.type}</p>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('type')}: {q.type}</p>
                   {q.options?.length > 0 && (
                     <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      Options: <span className={`${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{q.options.join(", ")}</span>
+                      {t('options')}: <span className={`${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{q.options.join(", ")}</span>
                     </p>
                   )}
                 </li>
@@ -209,9 +210,9 @@ export default function TemplateViewPage() {
 
         {/* Comments */}
         <div>
-          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Comments</h3>
+          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('comments')}</h3>
           {comments.length === 0 ? (
-            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No comments yet.</p>
+            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noCommentsYet')}</p>
           ) : (
             <ul className="space-y-3 list-disc ml-6">
               {comments.map((c) => (

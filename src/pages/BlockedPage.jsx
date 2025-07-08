@@ -1,10 +1,14 @@
 import React from "react";
+import { useTheme, useLanguage } from "../App";
 
 export default function BlockedPage() {
+  const { isDark } = useTheme();
+  const { t } = useLanguage();
+
   return (
     <div className="card max-w-md mx-auto mt-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-colors duration-300 text-center">
-      <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">Account Blocked</h2>
-      <p className="text-gray-700 dark:text-gray-300">Your account has been blocked by an administrator. If you believe this is a mistake, please contact support.</p>
+      <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">{t('accountBlocked')}</h2>
+      <p className="text-gray-700 dark:text-gray-300">{t('accountBlockedMessage')}</p>
     </div>
   );
 } 
