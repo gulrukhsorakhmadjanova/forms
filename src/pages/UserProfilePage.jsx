@@ -32,9 +32,17 @@ export default function UserProfilePage() {
     const fetchData = async () => {
       const viewingUserId = userId || authUser?.userId;
 
+  
       try {
-        const userDoc = await databases.getDocument(dbId, usersCol, viewingUserId);
-        setIsAdmin(userDoc.role === "admin");
+        const userQueryRes = await databases.listDocuments(dbId, usersCol, [
+          Query.equal("authUserId", viewingUserId),
+        ]);
+        if (userQueryRes.documents.length > 0) {
+          const userDoc = userQueryRes.documents[0];
+          setIsAdmin(userDoc.role === "admin");
+        } else {
+          console.warn("User document not found for:", viewingUserId);
+        }
       } catch (err) {
         console.warn("Could not fetch user role:", err);
       }
@@ -91,7 +99,7 @@ export default function UserProfilePage() {
         isDark ? "bg-gray-900 text-gray-100 border border-gray-700" : "bg-white text-gray-900 border border-gray-200"
       }`}>
 
-        {/* Header Section */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">
             {userId && authUser?.userId !== userId ? t("userProfile") : t("myProfile")}
@@ -139,23 +147,23 @@ export default function UserProfilePage() {
           templates.length === 0 ? (
             <p className={isDark ? "text-gray-300" : "text-gray-700"}>{t("noTemplatesFound")}</p>
           ) : (
-            templates.map((t) => (
+            templates.map((template) => (
               <div
-                key={t.$id}
+                key={template.$id}
                 className={`mb-6 p-4 border rounded transition-colors duration-300 ${
                   isDark ? "bg-gray-800 border-gray-700 text-gray-100" : "bg-white border-gray-200 text-gray-900"
                 }`}
               >
-                <h3 className="text-xl font-bold">{t.title}</h3>
-                <p className={isDark ? "text-gray-300" : "text-gray-700"}>{t.description}</p>
+                <h3 className="text-xl font-bold">{template.title}</h3>
+                <p className={isDark ? "text-gray-300" : "text-gray-700"}>{template.description}</p>
                 <p className={`text-sm mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                  {t("visibility")}: <b>{t.isPublic ? t("public") : t("private")}</b>
+                  {t("visibility")}: <b>{template.isPublic ? t("public") : t("private")}</b>
                 </p>
 
                 <div className="mt-2">
                   <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t("likes")}:</p>
                   <ul className={`list-disc ml-5 text-sm ${isDark ? "text-blue-400" : "text-blue-600"}`}>
-                    {(likesMap[t.$id] || []).map((like) => (
+                    {(likesMap[template.$id] || []).map((like) => (
                       <li key={like.$id}>{usersMap[like.userId] || like.userId}</li>
                     ))}
                   </ul>
@@ -164,8 +172,8 @@ export default function UserProfilePage() {
                 <div className="mt-2">
                   <p className={`text-sm font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>{t("comments")}:</p>
                   <ul className={`list-disc ml-5 text-sm ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-                    {(commentsMap[t.$id] || []).map((c) => (
-                      <li key={c.$id}>{usersMap[c.userId] || c.userId}</li>
+                    {(commentsMap[template.$id] || []).map((comment) => (
+                      <li key={comment.$id}>{usersMap[comment.userId] || comment.userId}</li>
                     ))}
                   </ul>
                 </div>
@@ -175,20 +183,20 @@ export default function UserProfilePage() {
         ) : forms.length === 0 ? (
           <p className={isDark ? "text-gray-300" : "text-gray-700"}>{t("noFormsFound")}</p>
         ) : (
-          forms.map((f) => (
+          forms.map((form) => (
             <div
-              key={f.$id}
+              key={form.$id}
               className={`mb-6 p-4 border rounded transition-colors duration-300 ${
                 isDark ? "bg-gray-800 border-gray-700 text-gray-100" : "bg-white border-gray-200 text-gray-900"
               }`}
             >
               <p className={`text-sm mb-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                {t("filledBy")}: {usersMap[f.createdBy] || f.createdBy}
+                {t("filledBy")}: {usersMap[form.createdBy] || form.createdBy}
               </p>
               <div className="mt-2">
                 <p className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{t("answers")}:</p>
                 <ul className={`list-disc ml-6 text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                  {(f.answers || []).map((ans, i) => (
+                  {(form.answers || []).map((ans, i) => (
                     <li key={i}>{ans}</li>
                   ))}
                 </ul>

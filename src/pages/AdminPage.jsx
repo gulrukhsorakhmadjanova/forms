@@ -274,20 +274,20 @@ function UserDetailsPanel({ user, dbId }) {
           <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
-            {templates.map(t => (
-              <li key={t.$id} className="mb-1">
-                {editingTemplateId === t.$id ? (
+            {templates.map(template => (
+              <li key={template.$id} className="mb-1">
+                {editingTemplateId === template.$id ? (
                   <>
                     <input name="title" value={templateEdit.title} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
                     <input name="description" value={templateEdit.description} onChange={handleTemplateEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
-                    <button onClick={() => handleTemplateSave(t)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">{t('save')}</button>
+                    <button onClick={() => handleTemplateSave(template)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">{t('save')}</button>
                     <button onClick={handleTemplateCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">{t('cancel')}</button>
                   </>
                 ) : (
                   <>
-                    <Link to={`/template/${t.$id}`} className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">{t.title}</Link>
-                    <span className="ml-2 text-gray-600 dark:text-gray-300">{t.description}</span>
-                    <button onClick={() => handleTemplateEdit(t)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
+                    <Link to={`/template/${template.$id}`} className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">{template.title}</Link>
+                    <span className="ml-2 text-gray-600 dark:text-gray-300">{template.description}</span>
+                    <button onClick={() => handleTemplateEdit(template)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
                   </>
                 )}
               </li>
@@ -301,13 +301,13 @@ function UserDetailsPanel({ user, dbId }) {
           <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
-            {allTemplates.map(t => (
-              <li key={t.$id} className="mb-1">
-                <span className="text-blue-600 dark:text-blue-400 font-semibold">{t.title}</span>
-                {likedTemplatesMap[t.$id] ? (
-                  <button onClick={() => handleUnlike(t.$id)} disabled={saving} className="ml-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">{t('unlike')}</button>
+            {allTemplates.map(template => (
+              <li key={template.$id} className="mb-1">
+                <span className="text-blue-600 dark:text-blue-400 font-semibold">{template.title}</span>
+                {likedTemplatesMap[template.$id] ? (
+                  <button onClick={() => handleUnlike(template.$id)} disabled={saving} className="ml-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">{t('unlike')}</button>
                 ) : (
-                  <button onClick={() => handleLike(t.$id)} disabled={saving} className="ml-2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded">{t('like')}</button>
+                  <button onClick={() => handleLike(template.$id)} disabled={saving} className="ml-2 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded">{t('like')}</button>
                 )}
               </li>
             ))}
@@ -320,25 +320,25 @@ function UserDetailsPanel({ user, dbId }) {
           <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
-            {forms.map(f => (
-              <li key={f.$id} className="mb-1">
-                <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Form ID: {f.$id}</span>
-                {editingFormId === f.$id ? (
+            {forms.map(form => (
+              <li key={form.$id} className="mb-1">
+                <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Form ID: {form.$id}</span>
+                {editingFormId === form.$id ? (
                   <>
                     <textarea value={formEdit.answers} onChange={handleFormEditChange} className="border rounded px-2 py-1 w-full mt-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" rows={3} />
-                    <button onClick={() => handleFormSave(f)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1 mt-1">{t('save')}</button>
+                    <button onClick={() => handleFormSave(form)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1 mt-1">{t('save')}</button>
                     <button onClick={handleFormCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded mt-1">{t('cancel')}</button>
                   </>
                 ) : (
                   <>
-                    {Array.isArray(f.answers) && f.answers.length > 0 && (
+                    {Array.isArray(form.answers) && form.answers.length > 0 && (
                       <ul className={`list-decimal ml-6 mt-1 text-sm ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
-                        {f.answers.map((ans, idx) => (
+                        {form.answers.map((ans, idx) => (
                           <li key={idx}>{ans}</li>
                         ))}
                       </ul>
                     )}
-                    <button onClick={() => handleFormEdit(f)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
+                    <button onClick={() => handleFormEdit(form)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
                   </>
                 )}
               </li>
@@ -352,18 +352,18 @@ function UserDetailsPanel({ user, dbId }) {
           <span className="ml-2 text-gray-400">{t('none')}</span>
         ) : (
           <ul className="list-disc ml-6">
-            {comments.map(c => (
-              <li key={c.$id} className="mb-1">
-                {editingCommentId === c.$id ? (
+            {comments.map(comment => (
+              <li key={comment.$id} className="mb-1">
+                {editingCommentId === comment.$id ? (
                   <>
                     <input value={commentEdit.content} onChange={handleCommentEditChange} className="border rounded px-2 py-1 mr-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" />
-                    <button onClick={() => handleCommentSave(c)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">{t('save')}</button>
+                    <button onClick={() => handleCommentSave(comment)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mr-1">{t('save')}</button>
                     <button onClick={handleCommentCancel} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded">{t('cancel')}</button>
                   </>
                 ) : (
                   <>
-                    <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{c.content}</span>
-                    <button onClick={() => handleCommentEdit(c)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
+                    <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{comment.content}</span>
+                    <button onClick={() => handleCommentEdit(comment)} className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">{t('edit')}</button>
                   </>
                 )}
               </li>
@@ -379,7 +379,7 @@ function UserDetailsPanel({ user, dbId }) {
           <ul className="list-disc ml-6">
             {likes.map(like => {
               // Find the template for this like
-              const template = allTemplates.find(t => t.$id === like.templateId);
+              const template = allTemplates.find(tpl => tpl.$id === like.templateId);
               return (
                 <li key={like.$id} className="mb-1">
                   <span className={`${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
