@@ -12,7 +12,7 @@ export default function TemplateTable({ templates, isDark, t, navigate }) {
           <tr className={isDark ? "bg-gray-800" : "bg-gray-50"}>
             <th className={`text-left p-3 font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{t("title")}</th>
             <th className={`text-left p-3 font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{t("topic")}</th>
-            <th> </th>
+            <th className={`text-left p-3 font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{t("tags")}</th>
             <th className={`text-left p-3 font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{t("actions")}</th>
           </tr>
         </thead>
