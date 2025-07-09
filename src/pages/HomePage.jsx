@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { databases } from "../lib/appwrite";
-import { useAuth, useTheme, useLanguage } from "../App";
+import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../contexts/LanguageContext";
+import TemplateSearchInput from "../components/TemplateSearchInput";
+import TemplateTable from "../components/TemplateTable";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -59,16 +63,11 @@ export default function HomePage() {
           {/* Search + Templates */}
           <h3 className="text-lg font-semibold mb-4">{t("browseTemplates")}</h3>
 
-          <input
-            type="text"
-            placeholder={t("searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={`mb-6 w-full max-w-md px-4 py-3 border rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-              isDark
-                ? "bg-gray-900 text-gray-100 border-gray-600 focus:ring-blue-400"
-                : "bg-white text-gray-900 border-gray-300 focus:ring-blue-500"
-            }`}
+          <TemplateSearchInput
+            search={search}
+            setSearch={setSearch}
+            isDark={isDark}
+            t={t}
           />
 
           {/* Template Results */}
@@ -77,56 +76,12 @@ export default function HomePage() {
           ) : filtered.length === 0 ? (
             <p className={isDark ? "text-gray-400" : "text-gray-500"}>{t("noTemplatesFound")}</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className={`w-full border-collapse rounded-xl shadow-2xl border transition-colors duration-300 ${
-                isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
-              }`}>
-                <thead>
-                  <tr className={isDark ? "bg-gray-800" : "bg-gray-50"}>
-                    <th className={`text-left p-3 font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{t("title")}</th>
-                    <th className={`text-left p-3 font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{t("topic")}</th>
-                    <th > </th>
-                    <th className={`text-left p-3 font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{t("actions")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((template) => (
-                    <tr
-                      key={template.$id}
-                      className={`border-t transition-all duration-200 ${
-                        isDark ? "border-gray-700 hover:bg-gray-800" : "border-gray-200 hover:bg-gray-50"
-                      }`}
-                    >
-                      <td className={`p-3 ${isDark ? "text-gray-100" : "text-gray-900"}`}>{template.title}</td>
-                      <td className={`p-3 ${isDark ? "text-gray-100" : "text-gray-900"}`}>{template.topic}</td>
-                      <td className={`p-3 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{(template.tags || []).join(", ")}</td>
-                      <td className="p-3 flex gap-2">
-                        <button
-                          onClick={() => navigate(`/template/${template.$id}`)}
-                          className={`font-medium px-2 py-1 rounded transition-colors ${
-                            isDark
-                              ? "text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                              : "text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                          }`}
-                        >
-                          {t("details")}
-                        </button>
-                        <button
-                          onClick={() => navigate(`/template/${template.$id}/fill`)}
-                          className={`font-medium px-2 py-1 rounded transition-colors ${
-                            isDark
-                              ? "text-green-400 hover:text-green-300 hover:bg-green-900/20"
-                              : "text-green-600 hover:text-green-800 hover:bg-green-50"
-                          }`}
-                        >
-                          {t("fill")}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <TemplateTable
+              templates={filtered}
+              isDark={isDark}
+              t={t}
+              navigate={navigate}
+            />
           )}
         </div>
       </div>

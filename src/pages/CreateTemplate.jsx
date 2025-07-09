@@ -5,7 +5,11 @@ import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import ReactTagInput from "@pathofdev/react-tag-input";
 import "@pathofdev/react-tag-input/build/index.css";
-import { useTheme, useLanguage } from "../App";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../contexts/LanguageContext";
+import TemplateFormFields from "../components/TemplateFormFields";
+import TemplateQuestionsList from "../components/TemplateQuestionsList";
+import AddQuestionButton from "../components/AddQuestionButton";
 
 const topics = ["Education", "Quiz", "Other"];
 const types = ["string-line", "multi-line", "integer", "checkbox", "drop-down"];
@@ -107,48 +111,24 @@ export default function CreateTemplate() {
         {error && <p className={`mb-2 ${isDark ? 'text-red-400' : 'text-red-600'}`}>{error}</p>}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input name="title" placeholder={t('title')} onChange={handleChange} required className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`} />
-          <textarea name="description" placeholder={t('descriptionMarkdown')} onChange={handleChange} required className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`} />
-          <div className={`my-2 p-3 rounded transition-colors duration-300 ${isDark ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
-            <b className={isDark ? 'text-gray-200' : 'text-gray-800'}>{t('preview')}:</b>
-            <div className={`border p-2 rounded min-h-[40px] transition-colors duration-300 ${isDark ? 'border-gray-700 bg-gray-900 text-gray-100' : 'border-gray-200 bg-white text-gray-900'}`}>
-              <ReactMarkdown>{form.description}</ReactMarkdown>
-            </div>
-          </div>
-          <select name="topic" onChange={handleChange} value={form.topic} className={`border rounded px-3 py-2 transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}>
-            {topics.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <label className={isDark ? 'text-gray-200' : 'text-gray-800'}>{t('tags')}:</label>
-          <ReactTagInput
+          <TemplateFormFields
+            form={form}
+            handleChange={handleChange}
             tags={tags}
-            onChange={setTags}
-            placeholder={t('typeAndPressEnter')}
+            setTags={setTags}
+            isDark={isDark}
+            t={t}
           />
-          <input name="imageUrl" placeholder={t('imageUrlOptional')} onChange={handleChange} className={`border rounded px-3 py-2 transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-900 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`} />
-          <label className={`flex items-center gap-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-            <input type="checkbox" name="isPublic" onChange={handleChange} /> {t('makePublic')}
-          </label>
 
           <h3 className={`text-lg font-semibold mt-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('questions')}</h3>
-          {questions.map((q, i) => (
-            <div key={i} className={`mb-4 p-4 border rounded-lg transition-colors duration-300 ${isDark ? 'border-gray-700 bg-gray-900 text-gray-100' : 'border-gray-200 bg-gray-50 text-gray-900'}`}>
-              <input placeholder={t('title')} value={q.title} onChange={e => handleQuestionChange(i, "title", e.target.value)} required className={`border rounded px-3 py-2 mb-2 w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-800 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`} />
-              <textarea placeholder={t('description')} value={q.description} onChange={e => handleQuestionChange(i, "description", e.target.value)} className={`border rounded px-3 py-2 mb-2 w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-800 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`} />
-              <select value={q.type} onChange={e => handleQuestionChange(i, "type", e.target.value)} className={`border rounded px-3 py-2 mb-2 w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-800 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`}>
-                {types.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-              {(q.type === 'drop-down' || q.type === 'checkbox') && (
-                <input placeholder={t('optionsCommaSeparated')} value={q.options} onChange={e => handleQuestionChange(i, "options", e.target.value)} className={`border rounded px-3 py-2 mb-2 w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-800 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`} />
-              )}
-              <input type="number" placeholder={t('order')} value={q.order} onChange={e => handleQuestionChange(i, "order", parseInt(e.target.value))} className={`border rounded px-3 py-2 mb-2 w-full transition-colors duration-300 ${isDark ? 'border-gray-600 bg-gray-800 text-gray-100' : 'border-gray-300 bg-white text-gray-900'}`} />
-              <label className={`flex items-center gap-2 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                <input type="checkbox" checked={q.showInTable} onChange={e => handleQuestionChange(i, "showInTable", e.target.checked)} />
-                {t('showInTable')}
-              </label>
-              <button type="button" onClick={() => removeQuestion(i)} className="mt-2 text-red-600 dark:text-red-400 hover:underline">{t('removeQuestion')}</button>
-            </div>
-          ))}
-          <button type="button" onClick={addQuestion} className="mb-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors">{t('addQuestion')}</button>
+          <TemplateQuestionsList
+            questions={questions}
+            handleQuestionChange={handleQuestionChange}
+            removeQuestion={removeQuestion}
+            isDark={isDark}
+            t={t}
+          />
+          <AddQuestionButton onClick={addQuestion} t={t} />
           <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors">{t('saveTemplate')}</button>
         </form>
       </div>

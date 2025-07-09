@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { account, databases } from "../lib/appwrite";
 import { ID } from "appwrite";
-import { useAuth } from "../App";
-import { useLanguage } from "../App";
-import { useTheme } from "../App";
+import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "../contexts/ThemeContext";
+import LoginForm from "../components/LoginForm";
+import DontHaveAccount from "../components/DontHaveAccount";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,12 +16,6 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Debug function to check environment variables
-  // Removed checkEnvironment and testConnection functions
-
-  // Check environment on component mount
-  // Removed useEffect for checkEnvironment
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -81,9 +77,6 @@ export default function Login() {
         <h2 className={`text-2xl font-bold text-center mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('login')}</h2>
         <p className={`text-center mb-6 text-base transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{t('signInToAccount')}</p>
         
-        {/* Debug Section */}
-        {/* Removed debug UI section */}
-        
         {error && (
           <p className={`px-3 py-2 rounded mb-4 text-center text-sm transition-colors duration-300 ${
             isDark ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-700'
@@ -91,57 +84,15 @@ export default function Login() {
             {error}
           </p>
         )}
-        <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-4">
-          <input
-            name="email"
-            type="email"
-            placeholder={t('email')}
-            value={form.email}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            className={`border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 transition-all duration-200 shadow-sm hover:shadow-md ${
-              isDark 
-                ? 'border-gray-600 bg-gray-900 text-gray-100' 
-                : 'border-gray-300 bg-white text-gray-900'
-            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          />
-          <input
-            name="password"
-            type="password"
-            placeholder={t('password')}
-            value={form.password}
-            onChange={handleChange}
-            required
-            disabled={loading}
-            className={`border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 transition-all duration-200 shadow-sm hover:shadow-md ${
-              isDark 
-                ? 'border-gray-600 bg-gray-900 text-gray-100' 
-                : 'border-gray-300 bg-white text-gray-900'
-            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          />
-          <button 
-            type="submit" 
-            disabled={loading}
-            className={`w-full font-semibold py-3 rounded-lg transition-all duration-200 mt-2 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              loading 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {loading ? 'Logging in...' : t('login')}
-          </button>
-        </form>
-        <div className={`border-t mt-8 pt-4 text-center transition-colors duration-300 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{t('dontHaveAccount')}</span>
-          <button
-            type="button"
-            onClick={() => navigate("/register")}
-            className="ml-2 text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm bg-transparent border-none cursor-pointer transition-colors duration-300"
-          >
-            {t('register')}
-          </button>
-        </div>
+        <LoginForm
+          form={form}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          isDark={isDark}
+          t={t}
+          loading={loading}
+        />
+        <DontHaveAccount isDark={isDark} t={t} navigate={navigate} />
       </div>
     </div>
   );

@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { databases } from "../lib/appwrite";
-import { useAuth, useTheme, useLanguage } from "../App";
+import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../contexts/LanguageContext";
 import { ID } from "appwrite";
+import TemplateHeader from "../components/TemplateHeader";
+import TemplateLikeSection from "../components/TemplateLikeSection";
+import TemplateLikedBy from "../components/TemplateLikedBy";
+import TemplateQuestionsList from "../components/TemplateQuestionsList";
+import TemplateCommentsList from "../components/TemplateCommentsList";
 
 export default function TemplateViewPage() {
   const { id } = useParams();
@@ -124,21 +131,7 @@ export default function TemplateViewPage() {
       <div className={`max-w-4xl mx-auto p-8 rounded-xl shadow-lg mt-0 space-y-8 transition-colors duration-300 ${
         isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'
       }`}>
-        <div>
-          <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{template.title}</h2>
-          <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{template.description}</p>
-          <p className={`text-sm mt-0 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('topic')}: <span className="font-medium">{template.topic}</span></p>
-          {template.imageUrl && (
-            <img
-              src={template.imageUrl}
-              alt="template"
-              className="my-4 rounded-lg shadow-md max-h-72 w-full object-cover"
-            />
-          )}
-          <div className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {t('tags')}: <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{template.tags?.join(", ") || t('none')}</span>
-          </div>
-        </div>
+        <TemplateHeader template={template} isDark={isDark} t={t} />
 
         {/* Error Message */}
         {error && (
@@ -149,80 +142,21 @@ export default function TemplateViewPage() {
           </div>
         )}
 
-        {/* Like Section */}
-        <div className="flex items-center justify-between">
-          {authUser && (
-            <button
-              onClick={handleLike}
-              disabled={loading}
-              className={`px-5 py-2 rounded-lg font-semibold transition-colors duration-300 ${
-                hasLiked
-                  ? "bg-red-500 hover:bg-red-600 text-white"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {loading ? t('loading') : hasLiked ? "❤️ " + t('unlike') : "🤍 " + t('like')}
-            </button>
-          )}
-          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{t('likes')}: {likes.length}</p>
-        </div>
+        <TemplateLikeSection
+          authUser={authUser}
+          handleLike={handleLike}
+          hasLiked={hasLiked}
+          loading={loading}
+          likes={likes}
+          isDark={isDark}
+          t={t}
+        />
 
-        {/* Liked by section */}
-        <div>
-          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('likedBy')}</h3>
-          {likes.length === 0 ? (
-            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noOneLikedYet')}</p>
-          ) : (
-            <ul className={`list-disc ml-6 space-y-1 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-              {likes.map((like) => (
-                <li key={like.$id}>{usersMap[like.userId] || t('unknownUser')}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <TemplateLikedBy likes={likes} usersMap={usersMap} isDark={isDark} t={t} />
 
-        {/* Questions */}
-        <div>
-          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('questions')}</h3>
-          {questions.length === 0 ? (
-            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noQuestionsAdded')}</p>
-          ) : (
-            <ul className="space-y-4">
-              {questions.map((q, i) => (
-                <li key={q.$id} className={`p-4 rounded-lg shadow-sm transition-colors duration-300 ${
-                  isDark ? 'bg-gray-700 text-gray-100' : 'bg-gray-50 text-gray-900'
-                }`}>
-                  <p className={`text-lg font-medium mb-1 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{i + 1}. {q.title}</p>
-                  <p className={`text-sm mb-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {q.description || t('noDescription')}
-                  </p>
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('type')}: {q.type}</p>
-                  {q.options?.length > 0 && (
-                    <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {t('options')}: <span className={`${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{q.options.join(", ")}</span>
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <TemplateQuestionsList questions={questions} isDark={isDark} t={t} />
 
-        {/* Comments */}
-        <div>
-          <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{t('comments')}</h3>
-          {comments.length === 0 ? (
-            <p className={`italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('noCommentsYet')}</p>
-          ) : (
-            <ul className="space-y-3 list-disc ml-6">
-              {comments.map((c) => (
-                <li key={c.$id} className={`${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                  <strong>{usersMap[c.userId] || "Anonymous"}:</strong> {c.content}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <TemplateCommentsList comments={comments} usersMap={usersMap} isDark={isDark} t={t} />
       </div>
     </div>
   );

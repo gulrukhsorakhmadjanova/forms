@@ -1,5 +1,6 @@
 import React from "react";
-import { useTheme, useLanguage } from "../App";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function BlockedPage() {
   const { isDark } = useTheme();

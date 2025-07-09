@@ -1,7 +1,7 @@
 // ✅ ProtectedAdminRoute.jsx
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../App"; 
+import { useAuth } from "../contexts/AuthContext"; 
 
 export default function ProtectedAdminRoute({ children }) {
   const { authUser, loading } = useAuth();
