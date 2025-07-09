@@ -141,15 +141,6 @@ export default function FillFormPage() {
             t={t}
           />
 
-          {!questions.some(q => q.type === "checkbox") && (
-            <FormCommentBox
-              value={answers["open-answer"] || ""}
-              onChange={e => handleChange("open-answer", e.target.value)}
-              isDark={isDark}
-              t={t}
-            />
-          )}
-
           <FormSubmitOptions
             emailCopy={emailCopy}
             setEmailCopy={setEmailCopy}
